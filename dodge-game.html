@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DON'T DIE</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  background: #0a0a0f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+#title-screen { text-align:center; }
+#title-screen h1 { font-size:72px; font-weight:900; color:#f0f0ff; line-height:1; text-shadow:0 0 40px rgba(255,34,68,0.8); }
+#title-screen h1 span { color:#ff2244; }
+#title-screen p { color:#888; margin:16px 0 40px; font-size:14px; letter-spacing:2px; }
+.btn { background:#ff2244; color:white; border:none; padding:16px 48px; font-family:inherit; font-size:20px; font-weight:900; cursor:pointer; letter-spacing:2px; border-radius:2px; }
+#game-wrap { display:none; flex-direction:column; align-items:center; gap:12px; }
+#hud { display:flex; gap:40px; align-items:baseline; }
+#score-display { font-size:48px; font-weight:900; color:#00ffcc; min-width:120px; text-align:center; text-shadow:0 0 20px rgba(0,255,204,0.9), 0 0 40px rgba(0,255,204,0.4); }
+#best-display { font-size:16px; color:#555; letter-spacing:1px; }
+#best-display span { color:#ffee00; }
+#arena { position:relative; width:320px; height:320px; border:1px solid #222; background:#0d0d14; overflow:hidden; touch-action:none; }
+#game-canvas { position:absolute; top:0; left:0; display:block; }
+#level-txt { position:absolute; top:10px; left:12px; font-size:12px; color:#444; letter-spacing:1px; pointer-events:none; z-index:5; }
+#graze-txt { position:absolute; top:10px; right:12px; font-size:12px; color:#ffee00; font-weight:700; pointer-events:none; z-index:5; opacity:0; }
+#death-screen { display:none; text-align:center; }
+#death-screen h2 { font-size:64px; font-weight:900; color:#ff2244; text-shadow:0 0 30px rgba(255,34,68,0.9); margin-bottom:8px; }
+#result-score { font-size:24px; font-weight:900; color:#f0f0ff; margin:8px 0; }
+#new-best { font-size:13px; color:#ffee00; font-weight:700; letter-spacing:2px; margin-bottom:32px; height:20px; }
+</style>
+</head>
+<body>
+
+<div id="title-screen">
+  <h1>DON'T<br><span>DIE</span></h1>
+  <p>손가락으로 움직여 피하세요</p>
+  <button class="btn" id="start-btn">시작하기</button>
+</div>
+
+<div id="game-wrap">
+  <div id="hud">
+    <div id="score-display">0</div>
+    <div id="best-display">최고 <span id="best-val">0</span></div>
+  </div>
+  <div id="arena">
+    <canvas id="game-canvas" width="320" height="320"></canvas>
+    <div id="level-txt">LV 1</div>
+    <div id="graze-txt">GRAZE!</div>
+  </div>
+</div>
+
+<div id="death-screen">
+  <h2>DEAD</h2>
+  <div id="result-score">0점</div>
+  <div id="new-best"></div>
+  <button class="btn" id="retry-btn">다시하기</button>
+</div>
+
+<script>
+(function() {
+  var canvas = document.getElementById('game-canvas');
+  var ctx = canvas.getContext('2d');
+  var arena = document.getElementById('arena');
+  var scoreEl = document.getElementById('score-display');
+  var bestValEl = document.getElementById('best-val');
+  var levelTxt = document.getElementById('level-txt');
+  var grazeTxt = document.getElementById('graze-txt');
+
+  var W = 320, H = 320;
+  var mx = 160, my = 160;
+  var bullets = [], particles = [];
+  var score = 0, best = 0, running = false, raf = null;
+  var spawnTimer = 0, graze = 0, grazeTimer = 0;
+  var level = 1, frameCount = 0;
+  var PLAYER_R = 5, GRAZE_R = 20;
+
+  function getRect() { return arena.getBoundingClientRect(); }
+
+  arena.addEventListener('mousemove', function(e) {
+    var r = getRect(); mx = e.clientX - r.left; my = e.clientY - r.top;
+  });
+  arena.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    var r = getRect(); mx = e.touches[0].clientX - r.left; my = e.touches[0].clientY - r.top;
+  }, { passive: false });
+  arena.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var r = getRect(); mx = e.touches[0].clientX - r.left; my = e.touches[0].clientY - r.top;
+  }, { passive: false });
+
+  function startGame() {
+    document.getElementById('title-screen').style.display = 'none';
+    document.getElementById('death-screen').style.display = 'none';
+    document.getElementById('game-wrap').style.display = 'flex';
+    bullets = []; particles = [];
+    score = 0; graze = 0; level = 1; frameCount = 0; spawnTimer = 0;
+    mx = 160; my = 160; running = true;
+    if (raf) cancelAnimationFrame(raf);
+    loop();
+  }
+
+  document.getElementById('start-btn').addEventListener('click', startGame);
+  document.getElementById('retry-btn').addEventListener('click', startGame);
+
+  function randBullet() {
+    var side = Math.floor(Math.random() * 4);
+    var x, y;
+    if (side === 0)      { x = Math.random() * W; y = -12; }
+    else if (side === 1) { x = Math.random() * W; y = H + 12; }
+    else if (side === 2) { x = -12; y = Math.random() * H; }
+    else                 { x = W + 12; y = Math.random() * H; }
+    var spd = 1.4 + level * 0.25 + Math.random() * 0.4;
+    var r = Math.random();
+    var type = 'normal';
+    if (level >= 3 && r < 0.12) type = 'big';
+    else if (level >= 2 && r < 0.30) type = 'fast';
+    if (level >= 5 && Math.random() < 0.07) type = 'homing';
+    var actualSpd = type === 'fast' ? spd * 1.8 : type === 'big' ? spd * 0.65 : spd;
+    var spread = level < 3 ? 0.7 : 0.35;
+    var angle = Math.atan2(my - y, mx - x) + (Math.random() - 0.5) * spread;
+    bullets.push({ x:x, y:y, vx:Math.cos(angle)*actualSpd, vy:Math.sin(angle)*actualSpd, type:type, age:0, grazed:false });
+  }
+
+  function getBR(type) {
+    if (type === 'big') return 10;
+    if (type === 'fast') return 4;
+    if (type === 'homing') return 5;
+    return 5;
+  }
+
+  function addParticles(x, y, color, n) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var s = 1 + Math.random() * 3;
+      particles.push({ x:x, y:y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:1, decay:0.04+Math.random()*0.04, r:2+Math.random()*3, color:color });
+    }
+  }
+
+  function loop() {
+    if (!running) return;
+    raf = requestAnimationFrame(loop);
+    frameCount++;
+    level = 1 + Math.floor(frameCount / 400);
+    levelTxt.textContent = 'LV ' + level;
+
+    var spawnRate = Math.max(18, 55 - level * 4);
+    spawnTimer++;
+    if (spawnTimer >= spawnRate) {
+      spawnTimer = 0;
+      randBullet();
+      if (level >= 4 && Math.random() < 0.3) randBullet();
+    }
+
+    score = Math.floor(frameCount * 0.5 + graze * 50);
+    scoreEl.textContent = score;
+
+    var px = Math.max(10, Math.min(W - 10, mx));
+    var py = Math.max(10, Math.min(H - 10, my));
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    ctx.lineWidth = 1;
+    var gx, gy;
+    for (gx = 0; gx <= W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+    for (gy = 0; gy <= H; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+
+    // Particles
+    var alive = [], i, p;
+    for (i = 0; i < particles.length; i++) {
+      p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      p.life -= p.decay;
+      p.vx *= 0.92; p.vy *= 0.92;
+      if (p.life > 0) {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+        ctx.fill();
+        alive.push(p);
+      }
+    }
+    ctx.globalAlpha = 1;
+    particles = alive;
+
+    // Bullets
+    var bAlive = [], b, dx, dy, d, br, col;
+    var bColors = { normal:'#ff2244', fast:'#ffee00', big:'#ff6600', homing:'#cc00ff' };
+    for (i = 0; i < bullets.length; i++) {
+      b = bullets[i];
+      b.age++;
+
+      if (b.type === 'homing' && b.age > 30) {
+        dx = px - b.x; dy = py - b.y;
+        d = Math.sqrt(dx*dx + dy*dy);
+        if (d > 0) {
+          b.vx += (dx/d) * 0.06; b.vy += (dy/d) * 0.06;
+          var spd2 = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+          var maxSpd = 2.5 + level * 0.2;
+          if (spd2 > maxSpd) { b.vx = b.vx/spd2*maxSpd; b.vy = b.vy/spd2*maxSpd; }
+        }
+      }
+
+      b.x += b.vx; b.y += b.vy;
+
+      if (b.x < -30 || b.x > W+30 || b.y < -30 || b.y > H+30) {
+        addParticles(Math.max(0,Math.min(W,b.x)), Math.max(0,Math.min(H,b.y)),
+          b.type==='homing'?'#cc00ff':b.type==='fast'?'#ffee00':'#ff2244', 3);
+        continue;
+      }
+
+      dx = b.x - px; dy = b.y - py;
+      d = Math.sqrt(dx*dx + dy*dy);
+      br = getBR(b.type);
+
+      if (d < PLAYER_R + br) { die(); return; }
+
+      if (!b.grazed && d < GRAZE_R + br) {
+        b.grazed = true; graze++; grazeTimer = 50;
+        addParticles(b.x, b.y, '#ffee00', 4);
+      }
+      if (b.grazed && d > GRAZE_R + br + 6) b.grazed = false;
+
+      col = bColors[b.type] || '#ff2244';
+      ctx.save();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = col;
+      ctx.fillStyle = col;
+      if (b.type === 'homing') {
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.age * 0.1);
+        ctx.fillRect(-br, -br, br*2, br*2);
+      } else {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, br, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      bAlive.push(b);
+    }
+    bullets = bAlive;
+
+    grazeTimer--;
+    if (grazeTimer > 0) {
+      grazeTxt.style.opacity = '1';
+      grazeTxt.textContent = 'GRAZE ' + graze + (graze >= 10 ? '!' : '');
+    } else {
+      grazeTxt.style.opacity = '0';
+    }
+
+    // Player triangle
+    ctx.save();
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = '#00ffcc';
+    ctx.fillStyle = '#00ffcc';
+    ctx.beginPath();
+    ctx.moveTo(px, py - 9);
+    ctx.lineTo(px + 7, py + 6);
+    ctx.lineTo(px - 7, py + 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function die() {
+    running = false;
+    if (raf) cancelAnimationFrame(raf);
+    ctx.fillStyle = 'rgba(255,34,68,0.35)';
+    ctx.fillRect(0, 0, W, H);
+    var isNew = score > best;
+    if (isNew) best = score;
+    bestValEl.textContent = best;
+    setTimeout(function() {
+      document.getElementById('game-wrap').style.display = 'none';
+      document.getElementById('death-screen').style.display = 'block';
+      document.getElementById('result-score').textContent = score + '점';
+      document.getElementById('new-best').textContent = isNew ? '🏆 NEW BEST!' : '';
+    }, 350);
+  }
+})();
+</script>
+
+</body>
+</html>

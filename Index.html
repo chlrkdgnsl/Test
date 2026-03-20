@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squad Rush</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#1a0f00;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    min-height:100vh; overflow:hidden; touch-action:none;
+    font-family:'Black Ops One',cursive;
+  }
+  #gameWrapper { position:relative; width:390px; height:620px; }
+  #gameCanvas { width:390px; height:620px; display:block; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.7); }
+  #ui {
+    position:absolute; top:12px; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 16px; pointer-events:none;
+  }
+  .ui-pill {
+    background:rgba(0,0,0,0.55);
+    border:1.5px solid rgba(255,200,50,0.5);
+    border-radius:20px; padding:5px 14px;
+    color:#ffe066; font-size:13px; letter-spacing:1px;
+    text-shadow:0 1px 4px #000;
+  }
+  #overlay {
+    position:absolute; inset:0; border-radius:14px;
+    background:rgba(0,0,0,0.82);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:18px; z-index:20;
+  }
+  #overlay h1 { color:#ffe066; font-size:36px; text-shadow:0 0 20px #ffaa00,0 2px 0 #000; letter-spacing:3px; }
+  #overlay p { color:#ddd; font-size:13px; text-align:center; line-height:1.8; padding:0 30px; }
+  .btn { border:none; font-family:'Black Ops One',cursive; font-size:17px; padding:14px 42px; border-radius:10px; cursor:pointer; letter-spacing:2px; }
+  .btn-gold { background:linear-gradient(135deg,#ffcc00,#ff8800); color:#000; box-shadow:0 4px 16px rgba(255,150,0,0.5); }
+  .btn-red  { background:linear-gradient(135deg,#ff3300,#880000); color:#fff; box-shadow:0 4px 16px rgba(255,0,0,0.4); }
+  #controls { display:flex; width:390px; padding:10px 16px; gap:14px; }
+  .moveBtn {
+    flex:1; height:64px;
+    background:linear-gradient(135deg,rgba(255,180,0,0.18),rgba(200,100,0,0.25));
+    border:2px solid rgba(255,180,0,0.4); border-radius:14px;
+    color:#ffe066; font-size:30px; cursor:pointer;
+    user-select:none; -webkit-user-select:none;
+    display:flex; align-items:center; justify-content:center; touch-action:none;
+    font-family:sans-serif;
+  }
+  .moveBtn.pressed { background:rgba(255,180,0,0.35); border-color:#ffcc00; box-shadow:0 0 12px rgba(255,180,0,0.4); }
+</style>
+</head>
+<body>
+<div id="gameWrapper">
+  <canvas id="gameCanvas" width="390" height="620"></canvas>
+  <div id="ui">
+    <div class="ui-pill">WAVE <span id="waveNum">1</span></div>
+    <div class="ui-pill" id="killBox">0 / 50</div>
+    <div class="ui-pill">⭐ <span id="scoreNum">0</span></div>
+  </div>
+  <div id="overlay">
+    <h1>SQUAD RUSH</h1>
+    <p>◀ ▶ 로 이동, 게이트를 통과해<br>군인을 늘리고 몬스터를 쓸어버려라!</p>
+    <button class="btn btn-gold" onclick="startGame()">▶ START</button>
+  </div>
+</div>
+<div id="controls">
+  <button class="moveBtn" id="btnLeft">◀</button>
+  <button class="moveBtn" id="btnRight">▶</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = 390, H = 620;
+
+// ── Isometric helpers ──────────────────────────────────────
+// World: x = horizontal, y = depth (0=near, 1=far)
+// We render a runway-style lane going upward (perspective)
+// Lane width narrows toward top
+const LANE_NEAR_Y = H - 30;   // bottom of lane on canvas
+const LANE_FAR_Y  = 180;      // top of lane (horizon)
+const LANE_NEAR_W = 360;      // width at bottom
+const LANE_FAR_W  = 120;      // width at horizon
+
+function worldToScreen(wx, wd) {
+  // wx: -1..1 (center=0), wd: 0..1 (0=near player, 1=far)
+  const t = wd; // 0=bottom,1=top
+  const sy = LANE_NEAR_Y + (LANE_FAR_Y - LANE_NEAR_Y) * t;
+  const laneW = LANE_NEAR_W + (LANE_FAR_W - LANE_NEAR_W) * t;
+  const cx = W / 2;
+  const sx = cx + wx * laneW * 0.5;
+  return { sx, sy, scale: 1 - t * 0.65 };
+}
+
+// ── State ──────────────────────────────────────────────────
+let state='idle';
+let squad, gates, enemies, bullets, particles, effects;
+let wave, score, frameCount, gateTimer;
+let soldierTimers=[];
+let waveKills, bossSpawned, bossDefeated;
+let spawnQueue=[], spawnTimer=0;
+let bannerText='', bannerTimer=0;
+const KILLS_TO_BOSS=50;
+
+const keys={left:false,right:false};
+const SPEED=0.018; // in world units
+
+function setupInput() {
+  const L=document.getElementById('btnLeft'), R=document.getElementById('btnRight');
+  ['mousedown','touchstart'].forEach(ev=>{
+    L.addEventListener(ev,e=>{e.preventDefault();keys.left=true; L.classList.add('pressed');},{passive:false});
+    R.addEventListener(ev,e=>{e.preventDefault();keys.right=true;R.classList.add('pressed');},{passive:false});
+  });
+  ['mouseup','touchend','mouseleave','touchcancel'].forEach(ev=>{
+    L.addEventListener(ev,()=>{keys.left=false; L.classList.remove('pressed');});
+    R.addEventListener(ev,()=>{keys.right=false;R.classList.remove('pressed');});
+  });
+}
+setupInput();
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=true; if(e.key==='ArrowRight')keys.right=true;});
+document.addEventListener('keyup',  e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;});
+
+// ── Squad formation ────────────────────────────────────────
+// soldiers arranged in isometric grid
+const MAX_VIS=30, COLS=5;
+function getFormation(cx, num) {
+  const vis=Math.min(num,MAX_VIS);
+  const pos=[];
+  for(let i=0;i<vis;i++){
+    const col=i%COLS, row=Math.floor(i/COLS);
+    const ox=(col-(COLS-1)/2)*0.05;
+    const od=row*0.032;
+    pos.push({wx:cx+ox, wd:od});
+  }
+  return pos;
+}
+
+// ── Gates ──────────────────────────────────────────────────
+const gateTypes=[
+  {label:'+5',  color:'#44aaff', dark:'#1155aa', apply:n=>n+5},
+  {label:'+10', color:'#44ffaa', dark:'#116644', apply:n=>n+10},
+  {label:'+20', color:'#88ff44', dark:'#336611', apply:n=>n+20},
+  {label:'×2',  color:'#ffdd00', dark:'#996600', apply:n=>n*2},
+  {label:'×3',  color:'#ff9900', dark:'#884400', apply:n=>n*3},
+  {label:'÷2',  color:'#ff4444', dark:'#881111', apply:n=>Math.max(1,Math.floor(n/2))},
+  {label:'-5',  color:'#ff6688', dark:'#882233', apply:n=>Math.max(1,n-5)},
+];
+
+let lastPassPid=null;
+function spawnGatePair(){
+  const wd=0.92+Math.random()*0.05;
+  let i1=Math.floor(Math.random()*gateTypes.length);
+  let i2; do{i2=Math.floor(Math.random()*gateTypes.length);}while(i2===i1);
+  const pid=frameCount+Math.random();
+  // Left gate at wx=-0.42, right gate at wx=+0.42
+  gates.push({wx:-0.72, wd, ww:0.40, ...gateTypes[i1], pid});
+  gates.push({wx:+0.32, wd, ww:0.40, ...gateTypes[i2], pid});
+}
+
+function checkGatePass(){
+  for(let i=gates.length-1;i>=0;i--){
+    const g=gates[i];
+    if(g.pid===lastPassPid) continue;
+    // squad front is at wd~0
+    if(g.wd<0.08 && squad.wx>=g.wx && squad.wx<=g.wx+g.ww){
+      lastPassPid=g.pid;
+      squad.num=g.apply(squad.num);
+      spawnFX(squad.wx,0.02,g.color,14);
+      spawnEffect(squad.wx,0.02,g.label,g.color);
+      gates=gates.filter(o=>o.pid!==g.pid);
+      soldierTimers=[];
+      return;
+    }
+  }
+}
+
+canvas.addEventListener('click',e=>{
+  if(state!=='playing') return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(W/rect.width);
+  const my=(e.clientY-rect.top)*(H/rect.height);
+  for(let i=gates.length-1;i>=0;i--){
+    const g=gates[i];
+    const {sx,sy,scale}=worldToScreen(g.wx+g.ww/2,g.wd);
+    const gw=80*scale, gh=38*scale;
+    if(mx>=sx-gw/2&&mx<=sx+gw/2&&my>=sy-gh/2&&my<=sy+gh/2){
+      squad.num=g.apply(squad.num);
+      spawnFX(squad.wx,0.02,g.color,14);
+      spawnEffect(squad.wx,0.02,g.label,g.color);
+      gates=gates.filter(o=>o.pid!==g.pid);
+      soldierTimers=[];
+      break;
+    }
+  }
+});
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const t=e.touches[0];
+  canvas.dispatchEvent(new MouseEvent('click',{clientX:t.clientX,clientY:t.clientY}));
+},{passive:false});
+
+// ── Enemies ────────────────────────────────────────────────
+function makeEnemy(wx){
+  const hp=Math.floor(8+wave*4+Math.random()*wave*2);
+  return {
+    wx, wd:1.0,
+    hp, maxHp:hp,
+    speed:0.003+wave*0.0008+Math.random()*0.001,
+    shootTimer:40+Math.random()*80,
+    shootInterval:Math.max(25,60-wave*3),
+    bulletDmg:1+Math.floor((wave-1)*0.6),
+    isBoss:false,
+    color:`hsl(${Math.random()*30+350},90%,55%)`
+  };
+}
+function makeBoss(){
+  return {
+    wx:0, wd:0.95,
+    hp:Math.floor(100+wave*50),
+    maxHp:Math.floor(100+wave*50),
+    speed:0.0008+wave*0.0002,
+    shootTimer:20,
+    shootInterval:Math.max(12,28-wave*2),
+    bulletDmg:2+Math.floor(wave*1.2),
+    isBoss:true,
+    angle:0
+  };
+}
+
+function buildQueue(){
+  spawnQueue=Array(KILLS_TO_BOSS).fill('normal');
+}
+
+function spawnNextEnemy(){
+  if(!spawnQueue.length) return;
+  spawnQueue.shift();
+  enemies.push(makeEnemy((Math.random()-0.5)*0.9));
+}
+
+// ── FX ────────────────────────────────────────────────────
+function spawnFX(wx,wd,color,n=6){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=0.003+Math.random()*0.008;
+    particles.push({wx,wd,vx:Math.cos(a)*s,vd:Math.sin(a)*0.003,color,life:1,size:4+Math.random()*4});
+  }
+}
+function spawnEffect(wx,wd,text,color){
+  effects.push({wx,wd,text,color,life:1,vd:-0.004});
+}
+function showBanner(t){ bannerText=t; bannerTimer=140; }
+
+// ── Start ──────────────────────────────────────────────────
+function startGame(){
+  document.getElementById('overlay').style.display='none';
+  squad={wx:0,num:10};
+  gates=[];enemies=[];bullets=[];particles=[];effects=[];soldierTimers=[];lastPassPid=null;
+  wave=1;score=0;frameCount=0;gateTimer=100;
+  startWave();
+  state='playing';
+  updateUI();
+  requestAnimationFrame(loop);
+}
+function startWave(){
+  waveKills=0;bossSpawned=false;bossDefeated=false;
+  spawnTimer=0;buildQueue();
+  enemies=[];
+  updateKillUI();
+}
+function updateUI(){ document.getElementById('waveNum').textContent=wave; document.getElementById('scoreNum').textContent=score; }
+function updateKillUI(){
+  const b=document.getElementById('killBox');
+  b.textContent=bossSpawned&&!bossDefeated?'👑 BOSS':waveKills+' / '+KILLS_TO_BOSS;
+}
+
+function loop(){ if(state!=='playing') return; frameCount++; update(); draw(); requestAnimationFrame(loop); }
+
+// ── Update ─────────────────────────────────────────────────
+function update(){
+  if(keys.left)  squad.wx=Math.max(-0.85,squad.wx-SPEED);
+  if(keys.right) squad.wx=Math.min( 0.85,squad.wx+SPEED);
+
+  gateTimer--;
+  if(gateTimer<=0){ spawnGatePair(); gateTimer=140+Math.random()*60; }
+
+  spawnTimer--;
+  if(spawnTimer<=0&&spawnQueue.length>0){
+    const batch=Math.min(spawnQueue.length,1+Math.floor(wave/2));
+    for(let i=0;i<batch;i++) spawnNextEnemy();
+    spawnTimer=Math.max(20,60-wave*4);
+  }
+
+  // Spawn boss
+  if(!spawnQueue.length&&!bossSpawned&&waveKills>=KILLS_TO_BOSS&&enemies.length===0){
+    bossSpawned=true;
+    enemies.push(makeBoss());
+    showBanner('⚠ BOSS INCOMING ⚠');
+    updateKillUI();
+  }
+
+  // Move gates closer
+  for(let g of gates) g.wd-=0.006;
+  checkGatePass();
+  gates=gates.filter(g=>g.wd>-0.05);
+
+  // Move enemies
+  for(let e of enemies){
+    if(e.isBoss){
+      e.angle+=0.02;
+      e.wx=Math.sin(e.angle)*0.6;
+      e.wd=Math.max(0.3,e.wd-e.speed);
+    } else {
+      e.wd-=e.speed;
+    }
+    e.shootTimer--;
+    if(e.shootTimer<=0){
+      e.shootTimer=e.shootInterval;
+      if(e.isBoss){
+        for(let a=-2;a<=2;a++){
+          const ang=Math.PI/2+a*0.3;
+          bullets.push({wx:e.wx,wd:e.wd,vx:Math.cos(ang)*0.005,vd:-Math.sin(ang)*0.006,fromEnemy:true,r:7,damage:e.bulletDmg});
+        }
+      } else {
+        const dvx=(squad.wx-e.wx)*0.006;
+        bullets.push({wx:e.wx,wd:e.wd,vx:dvx,vd:-0.007+wave*-0.0003,fromEnemy:true,r:5,damage:e.bulletDmg});
+      }
+    }
+  }
+
+  // Soldiers shoot
+  const formation=getFormation(squad.wx,squad.num);
+  const fireRate=Math.max(5,30-Math.floor(Math.log2(squad.num+1)*2.8));
+  const dmg=Math.max(1,Math.ceil(squad.num*0.14));
+  const bR=Math.min(3+squad.num*0.03,7);
+  while(soldierTimers.length<formation.length) soldierTimers.push(Math.floor(Math.random()*fireRate));
+  if(enemies.length>0){
+    for(let i=0;i<formation.length;i++){
+      soldierTimers[i]--;
+      if(soldierTimers[i]<=0){
+        soldierTimers[i]=fireRate+Math.floor(Math.random()*4);
+        const s=formation[i];
+        bullets.push({wx:s.wx,wd:s.wd+0.01,vx:0,vd:0.012,fromEnemy:false,r:bR,damage:dmg});
+      }
+    }
+  }
+  if(soldierTimers.length>formation.length) soldierTimers.length=formation.length;
+
+  // Move bullets + collisions
+  for(let b of bullets){b.wx+=b.vx;b.wd+=b.vd;}
+  bullets=bullets.filter(b=>{
+    if(b.wd>1.05||b.wd<-0.05||b.wx<-1.2||b.wx>1.2) return false;
+    if(!b.fromEnemy){
+      for(let i=enemies.length-1;i>=0;i--){
+        const e=enemies[i];
+        const dw=Math.abs(b.wd-e.wd), dx=Math.abs(b.wx-e.wx);
+        if(dx<0.12&&dw<0.08){
+          e.hp-=b.damage;
+          spawnFX(b.wx,b.wd,e.isBoss?'#ff6600':e.color,2);
+          if(e.hp<=0){
+            const pts=e.isBoss?e.maxHp:Math.ceil(e.maxHp/2);
+            score+=pts; updateUI();
+            spawnFX(e.wx,e.wd,e.isBoss?'#ff8800':e.color,e.isBoss?30:12);
+            spawnEffect(e.wx,e.wd,'+'+pts,e.isBoss?'#ff9900':'#ffd700');
+            if(!e.isBoss){
+              waveKills++; updateKillUI();
+            } else {
+              bossDefeated=true;
+              showBanner('WAVE '+wave+' CLEAR! 🎉');
+              wave++; updateUI();
+              setTimeout(()=>startWave(),2200);
+            }
+            enemies.splice(i,1);
+          }
+          return false;
+        }
+      }
+    } else {
+      const form2=getFormation(squad.wx,squad.num);
+      for(let p of form2){
+        const dw=Math.abs(b.wd-p.wd), dx=Math.abs(b.wx-p.wx);
+        if(dx<0.07&&dw<0.06){
+          squad.num=Math.max(0,squad.num-b.damage);
+          spawnFX(p.wx,p.wd,'#ff4444',3);
+          if(squad.num<=0){gameOver();return false;}
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+
+  // Enemy passes player — just disappear (no damage)
+  for(let i=enemies.length-1;i>=0;i--){
+    if(!enemies[i].isBoss&&enemies[i].wd<-0.02){
+      
+      enemies.splice(i,1);
+    }
+  }
+
+  // Particles
+  for(let p of particles){p.wx+=p.vx;p.wd+=p.vd;p.life-=0.04;}
+  particles=particles.filter(p=>p.life>0);
+  for(let e of effects){e.wd+=e.vd;e.life-=0.022;}
+  effects=effects.filter(e=>e.life>0);
+  if(bannerTimer>0) bannerTimer--;
+}
+
+// ── Draw ───────────────────────────────────────────────────
+function draw(){
+  // Sky gradient
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#1a0800');
+  sky.addColorStop(0.35,'#3d1800');
+  sky.addColorStop(1,'#c8a060');
+  ctx.fillStyle=sky;
+  ctx.fillRect(0,0,W,H);
+
+  drawLane();
+  drawGates();
+  drawEnemies();
+  drawBullets();
+  drawParticles();
+  drawSquad();
+  drawEffects();
+  drawBanner();
+}
+
+function drawLane(){
+  // Main lane floor
+  const laneGrad=ctx.createLinearGradient(W/2,LANE_FAR_Y,W/2,LANE_NEAR_Y);
+  laneGrad.addColorStop(0,'#d4b896');
+  laneGrad.addColorStop(0.5,'#e8cca8');
+  laneGrad.addColorStop(1,'#f0d8b8');
+  ctx.fillStyle=laneGrad;
+  ctx.beginPath();
+  const tl=worldToScreen(-1,1), tr=worldToScreen(1,1);
+  const bl=worldToScreen(-1,0), br=worldToScreen(1,0);
+  ctx.moveTo(tl.sx,tl.sy);ctx.lineTo(tr.sx,tr.sy);
+  ctx.lineTo(br.sx,br.sy);ctx.lineTo(bl.sx,bl.sy);
+  ctx.closePath();ctx.fill();
+
+  // Lane dividing lines
+  ctx.strokeStyle='rgba(150,110,70,0.4)';ctx.lineWidth=1;
+  for(let x=-0.5;x<=0.6;x+=0.5){
+    const t=worldToScreen(x,1), b=worldToScreen(x,0);
+    ctx.beginPath();ctx.moveTo(t.sx,t.sy);ctx.lineTo(b.sx,b.sy);ctx.stroke();
+  }
+
+  // Rail guards
+  for(let side of[-1,1]){
+    const railGrad=ctx.createLinearGradient(0,LANE_FAR_Y,0,LANE_NEAR_Y);
+    railGrad.addColorStop(0,'#888');
+    railGrad.addColorStop(1,'#555');
+    ctx.fillStyle=railGrad;
+    const ft=worldToScreen(side*1.05,1), fb=worldToScreen(side*1.05,0);
+    const nt=worldToScreen(side*0.98,1), nb=worldToScreen(side*0.98,0);
+    ctx.beginPath();ctx.moveTo(ft.sx,ft.sy);ctx.lineTo(nt.sx,nt.sy);ctx.lineTo(nb.sx,nb.sy);ctx.lineTo(fb.sx,fb.sy);ctx.closePath();ctx.fill();
+  }
+}
+
+function drawGates(){
+  // Sort far to near
+  const sorted=[...gates].sort((a,b)=>b.wd-a.wd);
+  for(let g of sorted){
+    const {sx,sy,scale}=worldToScreen(g.wx+g.ww/2,g.wd);
+    const gw=78*scale, gh=42*scale, depth=16*scale;
+
+    // 3D box - side face (darker)
+    ctx.fillStyle=g.dark;
+    ctx.beginPath();
+    ctx.moveTo(sx-gw/2, sy-gh/2);
+    ctx.lineTo(sx-gw/2+depth*0.6, sy-gh/2-depth*0.4);
+    ctx.lineTo(sx-gw/2+depth*0.6, sy+gh/2-depth*0.4);
+    ctx.lineTo(sx-gw/2, sy+gh/2);
+    ctx.closePath();ctx.fill();
+
+    // Top face
+    ctx.fillStyle=lighten(g.color,40);
+    ctx.beginPath();
+    ctx.moveTo(sx-gw/2, sy-gh/2);
+    ctx.lineTo(sx+gw/2, sy-gh/2);
+    ctx.lineTo(sx+gw/2+depth*0.6, sy-gh/2-depth*0.4);
+    ctx.lineTo(sx-gw/2+depth*0.6, sy-gh/2-depth*0.4);
+    ctx.closePath();ctx.fill();
+
+    // Front face
+    const fg=ctx.createLinearGradient(sx-gw/2,sy-gh/2,sx+gw/2,sy+gh/2);
+    fg.addColorStop(0,lighten(g.color,20));
+    fg.addColorStop(1,g.color);
+    ctx.fillStyle=fg;
+    ctx.beginPath();ctx.roundRect(sx-gw/2,sy-gh/2,gw,gh,5*scale);ctx.fill();
+
+    // Outline
+    ctx.strokeStyle=lighten(g.color,40);ctx.lineWidth=1.5*scale;
+    ctx.strokeRect(sx-gw/2,sy-gh/2,gw,gh);
+
+    // Label
+    ctx.fillStyle='#fff';
+    ctx.shadowColor='#000';ctx.shadowBlur=4;
+    ctx.font=`bold ${Math.round(18*scale)}px "Black Ops One",cursive`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(g.label,sx,sy);
+    ctx.shadowBlur=0;
+  }
+}
+
+function drawEnemies(){
+  const sorted=[...enemies].sort((a,b)=>a.wd-b.wd);
+  for(let e of sorted){
+    if(e.isBoss) drawBossSprite(e);
+    else drawEnemySprite(e);
+  }
+}
+
+function drawEnemySprite(e){
+  const {sx,sy,scale}=worldToScreen(e.wx,e.wd);
+  const s=scale*26;
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath();ctx.ellipse(sx,sy+s*.6,s*.7,s*.2,0,0,Math.PI*2);ctx.fill();
+
+  // Body (chunky soldier)
+  // Legs
+  ctx.fillStyle='#cc2200';
+  ctx.fillRect(sx-s*.28,sy+s*.1,s*.22,s*.5);
+  ctx.fillRect(sx+s*.06,sy+s*.1,s*.22,s*.5);
+  // Torso
+  const tg=ctx.createLinearGradient(sx-s*.35,sy-s*.4,sx+s*.35,sy+s*.15);
+  tg.addColorStop(0,'#ff4422');tg.addColorStop(1,'#aa1100');
+  ctx.fillStyle=tg;
+  ctx.beginPath();ctx.roundRect(sx-s*.35,sy-s*.4,s*.7,s*.55,s*.1);ctx.fill();
+  // Head
+  ctx.fillStyle='#ff5533';
+  ctx.beginPath();ctx.arc(sx,sy-s*.52,s*.26,0,Math.PI*2);ctx.fill();
+  // Helmet
+  ctx.fillStyle='#881100';
+  ctx.beginPath();ctx.ellipse(sx,sy-s*.62,s*.28,s*.16,0,Math.PI,0);ctx.fill();
+  // Eyes
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(sx-s*.1,sy-s*.5,s*.07,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(sx+s*.1,sy-s*.5,s*.07,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ff0';
+  ctx.beginPath();ctx.arc(sx-s*.1,sy-s*.5,s*.035,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(sx+s*.1,sy-s*.5,s*.035,0,Math.PI*2);ctx.fill();
+
+  // HP bar
+  const bw=s*1.8,bh=s*.18,bx=sx-bw/2,by=sy+s*.72;
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(bx-1,by-1,bw+2,bh+2);
+  ctx.fillStyle=e.hp/e.maxHp>.5?'#44ff44':e.hp/e.maxHp>.25?'#ffaa00':'#ff3333';
+  ctx.fillRect(bx,by,bw*(e.hp/e.maxHp),bh);
+}
+
+function drawBossSprite(e){
+  const {sx,sy,scale}=worldToScreen(e.wx,e.wd);
+  const s=scale*52;
+
+  // Aura
+  const aura=ctx.createRadialGradient(sx,sy,s*.2,sx,sy,s*2);
+  aura.addColorStop(0,'rgba(255,80,0,0.35)');
+  aura.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=aura;
+  ctx.beginPath();ctx.arc(sx,sy,s*2,0,Math.PI*2);ctx.fill();
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath();ctx.ellipse(sx,sy+s*.7,s*1.1,s*.28,0,0,Math.PI*2);ctx.fill();
+
+  // Legs (massive)
+  ctx.fillStyle='#8b2000';
+  ctx.beginPath();ctx.roundRect(sx-s*.55,sy+s*.3,s*.42,s*.7,s*.08);ctx.fill();
+  ctx.beginPath();ctx.roundRect(sx+s*.13,sy+s*.3,s*.42,s*.7,s*.08);ctx.fill();
+
+  // Body armor
+  const bg=ctx.createLinearGradient(sx-s,sy-s,sx+s,sy+s*.4);
+  bg.addColorStop(0,'#ffd700');bg.addColorStop(0.4,'#ff9900');bg.addColorStop(1,'#cc5500');
+  ctx.fillStyle=bg;
+  ctx.beginPath();ctx.roundRect(sx-s*.7,sy-s*.6,s*1.4,s*.95,s*.15);ctx.fill();
+
+  // Chest detail
+  ctx.fillStyle='rgba(255,255,150,0.3)';
+  ctx.beginPath();ctx.ellipse(sx,sy-s*.18,s*.3,s*.35,0,0,Math.PI*2);ctx.fill();
+
+  // Shoulders
+  for(let side of[-1,1]){
+    const sg=ctx.createRadialGradient(sx+side*s*.8,sy-s*.4,0,sx+side*s*.8,sy-s*.4,s*.4);
+    sg.addColorStop(0,'#ffd700');sg.addColorStop(1,'#cc6600');
+    ctx.fillStyle=sg;
+    ctx.beginPath();ctx.arc(sx+side*s*.8,sy-s*.4,s*.38,0,Math.PI*2);ctx.fill();
+  }
+
+  // Head
+  const hg=ctx.createRadialGradient(sx,sy-s*.9,s*.1,sx,sy-s*.9,s*.45);
+  hg.addColorStop(0,'#ffd700');hg.addColorStop(1,'#cc6600');
+  ctx.fillStyle=hg;
+  ctx.beginPath();ctx.arc(sx,sy-s*.9,s*.44,0,Math.PI*2);ctx.fill();
+
+  // Visor
+  ctx.fillStyle='rgba(0,200,255,0.7)';
+  ctx.shadowColor='#00ffff';ctx.shadowBlur=10;
+  ctx.beginPath();ctx.ellipse(sx,sy-s*.9,s*.3,s*.14,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Crown
+  ctx.font=`${Math.round(s*.6)}px serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('👑',sx,sy-s*1.5);
+
+  // HP bar (wide top bar)
+  const bw=W-40,bh=12,bx=20,by=16;
+  ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(bx-2,by-2,bw+4,bh+4);
+  const pct=e.hp/e.maxHp;
+  const hg2=ctx.createLinearGradient(bx,by,bx+bw,by);
+  hg2.addColorStop(0,'#ff2200');hg2.addColorStop(0.5,'#ff6600');hg2.addColorStop(1,'#ff9900');
+  ctx.fillStyle='#333';ctx.fillRect(bx,by,bw,bh);
+  ctx.fillStyle=hg2;ctx.fillRect(bx,by,bw*pct,bh);
+  ctx.strokeStyle='#ff4400';ctx.lineWidth=1.5;ctx.strokeRect(bx,by,bw,bh);
+  ctx.fillStyle='#fff';ctx.font='bold 9px "Black Ops One",cursive';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('BOSS  '+e.hp+' / '+e.maxHp,W/2,by+bh/2);
+}
+
+function drawBullets(){
+  for(let b of bullets){
+    const {sx,sy,scale}=worldToScreen(b.wx,b.wd);
+    if(b.fromEnemy){
+      ctx.shadowColor='#ff4400';ctx.shadowBlur=8;
+      ctx.fillStyle=b.r>5?'#ff8800':'#ff4444';
+      ctx.beginPath();ctx.arc(sx,sy,b.r*scale,0,Math.PI*2);ctx.fill();
+    } else {
+      ctx.shadowColor='#88ffff';ctx.shadowBlur=10;
+      ctx.fillStyle='#ccffff';
+      ctx.beginPath();ctx.ellipse(sx,sy,b.r*scale*.5,b.r*scale*1.2,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+  }
+}
+
+function drawParticles(){
+  for(let p of particles){
+    const {sx,sy,scale}=worldToScreen(p.wx,p.wd);
+    ctx.globalAlpha=p.life;
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(sx,sy,p.size*scale*p.life,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawSquad(){
+  const formation=getFormation(squad.wx,squad.num);
+  // Sort back to front
+  formation.sort((a,b)=>b.wd-a.wd);
+  for(let s of formation) drawFriendlySoldier(s.wx,s.wd);
+
+  // Number badge below squad
+  const front=worldToScreen(squad.wx,0);
+  const t=squad.num.toString();
+  const bw=Math.max(56,t.length*17+22);
+  ctx.shadowColor='#ffcc00';ctx.shadowBlur=16;
+  ctx.fillStyle='rgba(0,0,0,0.82)';
+  ctx.beginPath();ctx.roundRect(front.sx-bw/2,front.sy+10,bw,32,16);ctx.fill();
+  ctx.strokeStyle='#ffcc00';ctx.lineWidth=2;ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#ffe066';
+  ctx.font='bold 18px "Black Ops One",cursive';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(squad.num,front.sx,front.sy+26);
+}
+
+function drawFriendlySoldier(wx,wd){
+  const {sx,sy,scale}=worldToScreen(wx,wd);
+  const s=scale*16;
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.2)';
+  ctx.beginPath();ctx.ellipse(sx,sy+s*.6,s*.6,s*.18,0,0,Math.PI*2);ctx.fill();
+
+  // Legs
+  ctx.fillStyle='#1a3a6a';
+  ctx.fillRect(sx-s*.25,sy+s*.08,s*.2,s*.52);
+  ctx.fillRect(sx+s*.05,sy+s*.08,s*.2,s*.52);
+
+  // Body
+  const bg=ctx.createLinearGradient(sx,sy-s*.45,sx,sy+s*.15);
+  bg.addColorStop(0,'#4488ff');bg.addColorStop(1,'#1144cc');
+  ctx.fillStyle=bg;
+  ctx.beginPath();ctx.roundRect(sx-s*.32,sy-s*.45,s*.64,s*.56,s*.08);ctx.fill();
+
+  // Belt/equipment
+  ctx.fillStyle='#ffd700';
+  ctx.fillRect(sx-s*.32,sy+s*.05,s*.64,s*.1);
+
+  // Head
+  ctx.fillStyle='#ffd0a0';
+  ctx.beginPath();ctx.arc(sx,sy-s*.58,s*.24,0,Math.PI*2);ctx.fill();
+  // Helmet
+  const helmet=ctx.createLinearGradient(sx,sy-s*.82,sx,sy-s*.58);
+  helmet.addColorStop(0,'#3366ff');helmet.addColorStop(1,'#1133aa');
+  ctx.fillStyle=helmet;
+  ctx.beginPath();ctx.ellipse(sx,sy-s*.62,s*.28,s*.18,0,Math.PI,0);ctx.fill();
+
+  // Gun
+  ctx.fillStyle='#555';
+  ctx.fillRect(sx+s*.26,sy-s*.48,s*.42,s*.1);
+  ctx.shadowBlur=0;
+}
+
+function drawEffects(){
+  for(let e of effects){
+    const {sx,sy}=worldToScreen(e.wx,e.wd);
+    ctx.globalAlpha=e.life;
+    ctx.shadowColor=e.color;ctx.shadowBlur=10;
+    ctx.fillStyle=e.color;
+    ctx.font='bold 20px "Black Ops One",cursive';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(e.text,sx,sy);
+    ctx.shadowBlur=0;
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawBanner(){
+  if(bannerTimer<=0) return;
+  ctx.globalAlpha=Math.min(1,bannerTimer/20)*Math.min(1,bannerTimer/15);
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.fillRect(0,H/2-36,W,72);
+  ctx.shadowColor='#ffcc00';ctx.shadowBlur=24;
+  ctx.fillStyle='#ffe066';
+  ctx.font='bold 28px "Black Ops One",cursive';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(bannerText,W/2,H/2);
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+}
+
+function lighten(hex,amt){
+  try{
+    const n=parseInt(hex.slice(1),16);
+    const r=Math.min(255,((n>>16)&0xff)+amt);
+    const g=Math.min(255,((n>>8)&0xff)+amt);
+    const b=Math.min(255,(n&0xff)+amt);
+    return `rgb(${r},${g},${b})`;
+  }catch{return hex;}
+}
+
+function gameOver(){
+  state='over';
+  const o=document.getElementById('overlay');
+  o.style.display='flex';
+  o.innerHTML=`
+    <div style="color:#ff3333;font-size:34px;text-shadow:0 0 20px #ff0000">GAME OVER</div>
+    <div class="ui-pill" style="font-size:15px">WAVE ${wave} &nbsp;·&nbsp; ⭐ ${score}</div>
+    <p>전 병력이 전멸했습니다!</p>
+    <button class="btn btn-red" onclick="startGame()">RETRY</button>
+  `;
+}
+</script>
+
+</body>
+</html>

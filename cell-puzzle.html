@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CHAIN</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  background: #12111a;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 16px;
+  touch-action: none;
+}
+
+#title-screen { text-align:center; }
+#title-screen h1 {
+font-size: 80px;
+font-weight: 900;
+color: #f0ece4;
+letter-spacing: -4px;
+line-height: 1;
+}
+#title-screen h1 span { color: #ff6b35; }
+#title-screen .sub { font-size:12px; color:#555; letter-spacing:4px; margin:10px 0 32px; text-transform:uppercase; }
+
+.rules { display:flex; flex-direction:column; gap:10px; margin-bottom:36px; text-align:left; max-width:280px; }
+.rule-item { display:flex; align-items:center; gap:12px; font-size:13px; color:#888; }
+.rdot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+
+.btn {
+background: #ff6b35;
+color: #12111a;
+border: none;
+padding: 16px 52px;
+font-family: inherit;
+font-size: 18px;
+font-weight: 900;
+cursor: pointer;
+letter-spacing: 3px;
+border-radius: 2px;
+}
+.btn:active { opacity: 0.8; }
+
+#game-wrap { display:none; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:400px; }
+
+#hud { display:flex; width:100%; justify-content:space-between; align-items:center; padding:0 4px; }
+.hud-item { text-align:center; }
+.hud-label { font-size:10px; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:2px; }
+.hud-val { font-size:32px; font-weight:900; line-height:1; }
+#moves-val { color:#f0ece4; }
+#level-val { color:#f0ece4; }
+#score-val { color:#ff6b35; text-shadow: 0 0 16px rgba(255,107,53,0.6); transition: transform 0.2s, color 0.2s; }
+
+#target-bar {
+width:100%; background:#1e1d2a; padding:10px 16px;
+border-radius:6px; display:flex; align-items:center; gap:10px; border:1px solid #2a2940;
+}
+#target-label { font-size:10px; color:#555; letter-spacing:2px; text-transform:uppercase; flex-shrink:0; }
+#target-dots { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+.target-dot { width:14px; height:14px; border-radius:50%; border:2px solid; transition:background 0.2s; }
+
+#grid-wrap { position:relative; touch-action:none; }
+#grid-canvas { display:block; }
+
+#msg-overlay {
+position:absolute; inset:0; display:none; flex-direction:column;
+align-items:center; justify-content:center; z-index:10;
+background:rgba(18,17,26,0.88); border-radius:8px;
+}
+#msg-overlay h2 { font-size:44px; font-weight:900; color:#f0ece4; letter-spacing:-2px; }
+#msg-overlay p { font-size:13px; color:#666; margin:8px 0 24px; letter-spacing:1px; }
+
+#progress-wrap { width:100%; height:5px; background:#1e1d2a; border-radius:3px; overflow:hidden; }
+#progress-bar { height:100%; background:#ff6b35; border-radius:3px; transition:width 0.4s ease; width:0%; }
+
+#bottom-row { display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; }
+#chain-count { font-size:12px; color:#444; letter-spacing:1px; min-height:18px; }
+#combo-flash { font-size:13px; font-weight:900; color:#ffcc00; letter-spacing:2px; min-height:18px; opacity:0; transition:opacity 0.3s; }
+
+#death-screen { display:none; text-align:center; }
+#death-screen h2 { font-size:56px; font-weight:900; color:#f0ece4; letter-spacing:-3px; margin-bottom:6px; }
+#death-sub { font-size:11px; color:#444; letter-spacing:3px; margin-bottom:16px; text-transform:uppercase; }
+#death-score { font-size:40px; font-weight:900; color:#ff6b35; margin-bottom:6px; text-shadow:0 0 20px rgba(255,107,53,0.5); }
+#death-best { font-size:13px; color:#555; letter-spacing:1px; margin-bottom:32px; }
+</style>
+
+</head>
+<body>
+
+<div id="title-screen">
+  <h1>CH<span>AI</span>N</h1>
+  <div class="sub">육각형 연결 퍼즐</div>
+  <div class="rules">
+    <div class="rule-item"><div class="rdot" style="background:#ff6b35"></div><span>같은 색 육각형을 드래그로 연결</span></div>
+    <div class="rule-item"><div class="rdot" style="background:#3ecfcf"></div><span>6방향 이웃과 연결 가능</span></div>
+    <div class="rule-item"><div class="rdot" style="background:#a8e063"></div><span>목표 개수를 제한 횟수 안에 클리어</span></div>
+    <div class="rule-item"><div class="rdot" style="background:#f7c59f"></div><span>길게 연결할수록 점수 폭발!</span></div>
+  </div>
+  <button class="btn" id="start-btn">시작하기</button>
+</div>
+
+<div id="game-wrap">
+  <div id="hud">
+    <div class="hud-item"><div class="hud-label">남은 횟수</div><div class="hud-val" id="moves-val">10</div></div>
+    <div class="hud-item"><div class="hud-label">레벨</div><div class="hud-val" id="level-val">1</div></div>
+    <div class="hud-item"><div class="hud-label">점수</div><div class="hud-val" id="score-val">0</div></div>
+  </div>
+  <div id="target-bar">
+    <div id="target-label">목표</div>
+    <div id="target-dots"></div>
+  </div>
+  <div id="grid-wrap">
+    <canvas id="grid-canvas"></canvas>
+    <div id="msg-overlay">
+      <h2 id="msg-title"></h2>
+      <p id="msg-sub"></p>
+      <button class="btn" id="msg-btn">계속하기</button>
+    </div>
+  </div>
+  <div id="progress-wrap"><div id="progress-bar"></div></div>
+  <div id="bottom-row">
+    <div id="chain-count"></div>
+    <div id="combo-flash"></div>
+  </div>
+</div>
+
+<div id="death-screen">
+  <h2>GAME OVER</h2>
+  <div id="death-sub">더 이상 진행할 수 없어요</div>
+  <div id="death-score">0점</div>
+  <div id="death-best"></div>
+  <button class="btn" id="retry-btn">다시하기</button>
+</div>
+
+<script>
+(function() {
+
+// ── 색상 팔레트 ──────────────────────────────────────────
+var COLORS = [
+  { fill:'#ff6b35', glow:'rgba(255,107,53,0.5)',  dark:'#c44a1a' },
+  { fill:'#3ecfcf', glow:'rgba(62,207,207,0.5)',  dark:'#1e8f8f' },
+  { fill:'#a8e063', glow:'rgba(168,224,99,0.5)',  dark:'#5a9e1a' },
+  { fill:'#f7c59f', glow:'rgba(247,197,159,0.5)', dark:'#c07a3a' },
+  { fill:'#c77dff', glow:'rgba(199,125,255,0.5)', dark:'#7b2fbe' },
+  { fill:'#ffcc00', glow:'rgba(255,204,0,0.5)',   dark:'#b38600' },
+];
+
+// ── 육각형 그리드 (offset coords) ───────────────────────
+// pointy-top hexagons, odd-r offset
+// 이웃 방향 (even row / odd row)
+var HEX_NEIGHBORS_EVEN = [[-1,0],[-1,1],[0,1],[1,1],[1,0],[0,-1]];
+var HEX_NEIGHBORS_ODD  = [[-1,-1],[-1,0],[0,1],[1,0],[1,-1],[0,-1]];
+
+var canvas = document.getElementById('grid-canvas');
+var ctx = canvas.getContext('2d');
+
+var COLS = 7, ROWS = 7;
+var HEX_R; // outer radius
+var HEX_H, HEX_W, X_OFFSET, Y_OFFSET;
+
+var grid = [];   // grid[r][c] = {color, popped}
+var targets = [];
+var moves, totalScore, best, level;
+var dragging = false, dragColor = -1, dragChain = [];
+var running = false;
+var comboTimer = null;
+
+function hexCenter(r, c) {
+  var x = c * HEX_W + (r % 2 === 1 ? HEX_W / 2 : 0) + X_OFFSET;
+  var y = r * HEX_H * 0.75 + Y_OFFSET;
+  return { x: x, y: y };
+}
+
+function setSize() {
+  var maxW = Math.min(window.innerWidth - 32, 360);
+  HEX_R = Math.floor(maxW / (COLS + 0.5) / 1.732 * 0.95);
+  HEX_W = Math.sqrt(3) * HEX_R;
+  HEX_H = 2 * HEX_R;
+  X_OFFSET = HEX_W / 2 + 2;
+  Y_OFFSET = HEX_R + 2;
+  canvas.width  = Math.ceil(COLS * HEX_W + HEX_W / 2 + 4);
+  canvas.height = Math.ceil(ROWS * HEX_H * 0.75 + HEX_H * 0.25 + 4);
+}
+
+function hexPath(cx, cy, r) {
+  ctx.beginPath();
+  for (var i = 0; i < 6; i++) {
+    var angle = Math.PI / 180 * (60 * i - 30);
+    var px = cx + r * Math.cos(angle);
+    var py = cy + r * Math.sin(angle);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+// ── 시작/레벨 ────────────────────────────────────────────
+function startGame() {
+  setSize();
+  totalScore = 0; best = 0; level = 1;
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('death-screen').style.display = 'none';
+  document.getElementById('game-wrap').style.display = 'flex';
+  loadLevel();
+}
+
+function loadLevel() {
+  running = true;
+  dragging = false; dragChain = []; dragColor = -1;
+  var numColors = Math.min(2 + Math.floor(level / 2), 6);
+  moves = Math.max(5, 14 - Math.floor(level * 0.5));
+
+  grid = [];
+  for (var r = 0; r < ROWS; r++) {
+    grid[r] = [];
+    for (var c = 0; c < COLS; c++) {
+      grid[r][c] = { color: Math.floor(Math.random() * numColors), popped: false };
+    }
+  }
+
+  // 색상별 카운트
+  var counts = {};
+  for (var r2 = 0; r2 < ROWS; r2++)
+    for (var c2 = 0; c2 < COLS; c2++) {
+      var ci = grid[r2][c2].color;
+      counts[ci] = (counts[ci] || 0) + 1;
+    }
+
+  var keys = Object.keys(counts).sort(function() { return Math.random()-0.5; });
+  var numT = Math.min(2 + Math.floor(level / 3), keys.length, 4);
+  targets = [];
+  for (var t = 0; t < numT; t++) {
+    var ci2 = parseInt(keys[t]);
+    var need = Math.max(3, Math.floor(counts[ci2] * (0.35 + Math.random()*0.2)));
+    targets.push({ color: ci2, needed: need, done: 0 });
+  }
+
+  updateHUD(); renderTargets(); draw();
+}
+
+// ── HUD ──────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('moves-val').textContent = moves;
+  document.getElementById('level-val').textContent = level;
+  document.getElementById('score-val').textContent = totalScore;
+  var total = 0, done = 0;
+  for (var i = 0; i < targets.length; i++) {
+    total += targets[i].needed;
+    done += Math.min(targets[i].done, targets[i].needed);
+  }
+  document.getElementById('progress-bar').style.width = (total > 0 ? done/total*100 : 0) + '%';
+}
+
+function renderTargets() {
+  var wrap = document.getElementById('target-dots');
+  wrap.innerHTML = '';
+  for (var i = 0; i < targets.length; i++) {
+    var t = targets[i], col = COLORS[t.color];
+    for (var j = 0; j < t.needed; j++) {
+      var d = document.createElement('div');
+      d.className = 'target-dot';
+      d.style.background = j < t.done ? col.fill : 'transparent';
+      d.style.borderColor = col.fill;
+      if (j < t.done) d.style.boxShadow = '0 0 5px ' + col.fill;
+      wrap.appendChild(d);
+    }
+  }
+}
+
+// ── 그리기 ───────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 배경
+  ctx.fillStyle = '#12111a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 체인 라인
+  if (dragging && dragChain.length > 1) {
+    var col = COLORS[dragColor];
+    ctx.save();
+    ctx.strokeStyle = col.fill;
+    ctx.lineWidth = HEX_R * 0.35;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = 0.45;
+    ctx.shadowBlur = 14; ctx.shadowColor = col.fill;
+    ctx.beginPath();
+    for (var i = 0; i < dragChain.length; i++) {
+      var ctr = hexCenter(dragChain[i].r, dragChain[i].c);
+      if (i === 0) ctx.moveTo(ctr.x, ctr.y); else ctx.lineTo(ctr.x, ctr.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 셀
+  for (var r = 0; r < ROWS; r++) {
+    for (var c = 0; c < COLS; c++) {
+      var cell = grid[r][c];
+      if (!cell || cell.popped) continue;
+      var ctr = hexCenter(r, c);
+      var isInChain = inChain(r, c);
+      var col2 = COLORS[cell.color];
+
+      ctx.save();
+      // 테두리 (빈 공간 느낌)
+      ctx.shadowBlur = isInChain ? 22 : 5;
+      ctx.shadowColor = col2.glow;
+
+      // 육각형 바탕
+      hexPath(ctr.x, ctr.y, HEX_R - 2);
+      ctx.fillStyle = '#1e1d2a';
+      ctx.fill();
+
+      // 내부 채우기
+      hexPath(ctr.x, ctr.y, HEX_R - 5);
+      ctx.fillStyle = isInChain ? col2.fill : col2.dark;
+      ctx.fill();
+
+      // 하이라이트
+      ctx.globalAlpha = 0.18;
+      hexPath(ctr.x, ctr.y - HEX_R * 0.12, HEX_R * 0.45);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+
+      // 체인 순서 숫자
+      var chainIdx = chainOrder(r, c);
+      if (chainIdx >= 0) {
+        ctx.globalAlpha = 1;
+        ctx.font = 'bold ' + Math.round(HEX_R * 0.55) + 'px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#12111a';
+        ctx.shadowBlur = 0;
+        ctx.fillText(chainIdx + 1, ctr.x, ctr.y + 1);
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // 체인 카운트
+  if (dragging && dragChain.length > 1) {
+    document.getElementById('chain-count').textContent = dragChain.length + '개 연결 중 · ' + (dragChain.length * dragChain.length * 10) + 'pt';
+  } else {
+    document.getElementById('chain-count').textContent = '';
+  }
+}
+
+function inChain(r, c) {
+  for (var i = 0; i < dragChain.length; i++)
+    if (dragChain[i].r === r && dragChain[i].c === c) return true;
+  return false;
+}
+
+function chainOrder(r, c) {
+  for (var i = 0; i < dragChain.length; i++)
+    if (dragChain[i].r === r && dragChain[i].c === c) return i;
+  return -1;
+}
+
+// ── 인접 확인: offset 테이블 + 픽셀 거리 이중 체크 ────────
+function isHexNeighbor(r1, c1, r2, c2) {
+  // 1차: offset 테이블
+  var dirs = (r1 % 2 === 0) ? HEX_NEIGHBORS_EVEN : HEX_NEIGHBORS_ODD;
+  for (var i = 0; i < dirs.length; i++) {
+    if (r1 + dirs[i][0] === r2 && c1 + dirs[i][1] === c2) return true;
+  }
+  // 2차: 픽셀 거리 fallback — 이웃간 거리는 HEX_W 이하
+  var c1t = hexCenter(r1, c1), c2t = hexCenter(r2, c2);
+  var dx = c1t.x - c2t.x, dy = c1t.y - c2t.y;
+  return Math.sqrt(dx*dx + dy*dy) < HEX_W * 1.05;
+}
+
+// ── 좌표 → 셀 ────────────────────────────────────────────
+function pixelToHex(px, py) {
+  var best = null, bestDist = Infinity;
+  for (var r = 0; r < ROWS; r++) {
+    for (var c = 0; c < COLS; c++) {
+      var ctr = hexCenter(r, c);
+      var d = (px-ctr.x)*(px-ctr.x) + (py-ctr.y)*(py-ctr.y);
+      if (d < bestDist) { bestDist = d; best = {r:r, c:c}; }
+    }
+  }
+  // 너무 멀면 무효
+  if (bestDist > HEX_R * HEX_R * 1.2) return null;
+  return best;
+}
+
+function clientToCanvas(clientX, clientY) {
+  var rect = canvas.getBoundingClientRect();
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+// ── 입력 ─────────────────────────────────────────────────
+function onDown(clientX, clientY) {
+  if (!running) return;
+  var pos = clientToCanvas(clientX, clientY);
+  var cell = pixelToHex(pos.x, pos.y);
+  if (!cell) return;
+  var g = grid[cell.r][cell.c];
+  if (!g || g.popped) return;
+  dragging = true;
+  dragColor = g.color;
+  dragChain = [{ r: cell.r, c: cell.c }];
+  draw();
+}
+
+function onMove(clientX, clientY) {
+  if (!dragging) return;
+  var pos = clientToCanvas(clientX, clientY);
+  var cell = pixelToHex(pos.x, pos.y);
+  if (!cell) return;
+  var g = grid[cell.r][cell.c];
+  if (!g || g.popped || g.color !== dragColor) return;
+
+  var last = dragChain[dragChain.length - 1];
+  if (cell.r === last.r && cell.c === last.c) return;
+
+  if (inChain(cell.r, cell.c)) return;
+  if (!isHexNeighbor(last.r, last.c, cell.r, cell.c)) return;
+
+  dragChain.push({ r: cell.r, c: cell.c });
+  draw();
+}
+
+function onUp() {
+  if (!dragging) return;
+  dragging = false;
+  if (dragChain.length >= 1) commitChain();
+  else { dragChain = []; draw(); }
+}
+
+canvas.addEventListener('mousedown',  function(e) { onDown(e.clientX, e.clientY); });
+canvas.addEventListener('mousemove',  function(e) { onMove(e.clientX, e.clientY); });
+canvas.addEventListener('mouseup',    onUp);
+canvas.addEventListener('mouseleave', onUp);
+canvas.addEventListener('touchstart', function(e) { e.preventDefault(); onDown(e.touches[0].clientX, e.touches[0].clientY); }, { passive:false });
+canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive:false });
+canvas.addEventListener('touchend',   function(e) { e.preventDefault(); onUp(); }, { passive:false });
+
+// ── 게임 로직 ─────────────────────────────────────────────
+function commitChain() {
+  var len = dragChain.length;
+  var pts = len * len * 10;
+
+  for (var t = 0; t < targets.length; t++) {
+    if (targets[t].color === dragColor)
+      targets[t].done = Math.min(targets[t].done + len, targets[t].needed);
+  }
+
+  for (var i = 0; i < dragChain.length; i++)
+    grid[dragChain[i].r][dragChain[i].c].popped = true;
+
+  totalScore += pts;
+  moves--;
+  dropAndFill();
+  dragChain = []; dragColor = -1;
+
+  updateHUD(); renderTargets(); draw();
+
+  // 콤보 플래시
+  if (len >= 5) showCombo(len >= 8 ? '🔥 MEGA ' + len + '!' : '⚡ CHAIN ' + len + '!');
+
+  // 점수 펄스
+  if (len >= 4) {
+    var el = document.getElementById('score-val');
+    el.style.transform = 'scale(1.4)';
+    el.style.color = '#ffcc00';
+    setTimeout(function() { el.style.transform = 'scale(1)'; el.style.color = '#ff6b35'; }, 250);
+  }
+
+  setTimeout(checkWin, 250);
+}
+
+function showCombo(txt) {
+  var el = document.getElementById('combo-flash');
+  el.textContent = txt;
+  el.style.opacity = '1';
+  if (comboTimer) clearTimeout(comboTimer);
+  comboTimer = setTimeout(function() { el.style.opacity = '0'; }, 1200);
+}
+
+function dropAndFill() {
+  var numColors = Math.min(2 + Math.floor(level / 2), 6);
+  for (var c = 0; c < COLS; c++) {
+    var alive = [];
+    for (var r = ROWS - 1; r >= 0; r--)
+      if (!grid[r][c].popped) alive.push(grid[r][c]);
+    for (var r2 = ROWS - 1; r2 >= 0; r2--) {
+      if (alive.length > 0) {
+        grid[r2][c] = alive.shift(); grid[r2][c].popped = false;
+      } else {
+        grid[r2][c] = { color: Math.floor(Math.random() * numColors), popped: false };
+      }
+    }
+  }
+}
+
+function checkWin() {
+  var allDone = true;
+  for (var t = 0; t < targets.length; t++)
+    if (targets[t].done < targets[t].needed) { allDone = false; break; }
+
+  if (allDone) {
+    running = false;
+    var bonus = moves * 80;
+    totalScore += bonus;
+    updateHUD();
+    showMsg('클리어! 🎉', '남은 횟수 보너스 +' + bonus + 'pt', function() {
+      level++; loadLevel();
+    });
+    return;
+  }
+
+  if (moves <= 0) {
+    running = false;
+    setTimeout(showGameOver, 200);
+  }
+}
+
+function showMsg(title, sub, cb) {
+  var ov = document.getElementById('msg-overlay');
+  document.getElementById('msg-title').textContent = title;
+  document.getElementById('msg-sub').textContent = sub;
+  ov.style.display = 'flex';
+  document.getElementById('msg-btn').onclick = function() { ov.style.display = 'none'; cb(); };
+}
+
+function showGameOver() {
+  var isNew = totalScore > best;
+  if (isNew) best = totalScore;
+  document.getElementById('game-wrap').style.display = 'none';
+  document.getElementById('death-screen').style.display = 'block';
+  document.getElementById('death-score').textContent = totalScore + '점';
+  document.getElementById('death-best').textContent = isNew ? '🏆 최고 기록!' : '최고 기록: ' + best + '점';
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('retry-btn').addEventListener('click', startGame);
+
+})();
+</script>
+
+</body>
+</html>

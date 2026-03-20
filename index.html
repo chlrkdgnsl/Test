@@ -240,6 +240,7 @@ canvas.addEventListener('touchstart',e=>{
   canvas.dispatchEvent(new MouseEvent('click',{clientX:t.clientX,clientY:t.clientY}));
 },{passive:false});
 
+
 function makeEnemy(wx){
   const hp=Math.floor(8+wave*4+Math.random()*wave*2);
   return{wx,wd:1.0,hp,maxHp:hp,
@@ -247,6 +248,7 @@ function makeEnemy(wx){
     shootTimer:40+Math.random()*80,
     shootInterval:Math.max(25,60-wave*3),
     bulletDmg:1+Math.floor((wave-1)*0.6),
+    color:'#ff4422',
     isBoss:false};
 }
 function makeBoss(){
@@ -308,10 +310,13 @@ function update(){
     spawnTimer=Math.max(20,60-wave*4);
   }
 
-  if(!spawnQueue.length&&!bossSpawned&&waveKills>=KILLS_TO_BOSS&&enemies.length===0){
+  // Boss spawns when all 50 monsters spawned AND all killed
+  if(!spawnQueue.length&&!bossSpawned&&enemies.length===0){
     bossSpawned=true;enemies.push(makeBoss());
     showBanner('⚠ BOSS INCOMING ⚠');updateKillUI();
   }
+
+
 
   for(let g of gates)g.wd-=0.006;
   checkGatePass();
@@ -366,7 +371,7 @@ function update(){
             spawnFX(e.wx,e.wd,e.isBoss?'#ff8800':'#ff4400',e.isBoss?30:12);
             spawnEff(e.wx,e.wd,'+'+pts,e.isBoss?'#ff9900':'#ffd700');
             if(!e.isBoss){waveKills++;updateKillUI();}
-            else{bossDefeated=true;showBanner('WAVE '+wave+' CLEAR! 🎉');wave++;updateUI();setTimeout(()=>startWave(),2200);}
+            else{bossDefeated=true;showBanner('WAVE '+wave+' CLEAR! 🎉');wave++;updateUI();setTimeout(()=>{squad.num=10;soldierTimers=[];startWave();},2200);}
             enemies.splice(i,1);
           }
           return false;

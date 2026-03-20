@@ -15,8 +15,8 @@
     min-height:100vh; overflow:hidden; touch-action:none;
     font-family:'Black Ops One',cursive;
   }
-  #gameWrapper { position:relative; width:390px; height:620px; }
-  #gameCanvas { width:390px; height:620px; display:block; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.7); }
+  #gameWrapper { position:relative; width:390px; height:100svh; max-height:700px; }
+  #gameCanvas { width:390px; height:100%; display:block; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.7); }
   #ui {
     position:absolute; top:12px; left:0; right:0;
     display:flex; justify-content:space-between; align-items:center;
@@ -41,17 +41,24 @@
   .btn { border:none; font-family:'Black Ops One',cursive; font-size:17px; padding:14px 42px; border-radius:10px; cursor:pointer; letter-spacing:2px; }
   .btn-gold { background:linear-gradient(135deg,#ffcc00,#ff8800); color:#000; box-shadow:0 4px 16px rgba(255,150,0,0.5); }
   .btn-red  { background:linear-gradient(135deg,#ff3300,#880000); color:#fff; box-shadow:0 4px 16px rgba(255,0,0,0.4); }
-  #controls { display:flex; width:390px; padding:10px 16px; gap:14px; }
+  #controls {
+    position:absolute;
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    left:0; right:0;
+    display:flex; padding:0 16px; gap:14px;
+    z-index:5;
+  }
   .moveBtn {
     flex:1; height:64px;
-    background:linear-gradient(135deg,rgba(255,180,0,0.18),rgba(200,100,0,0.25));
-    border:2px solid rgba(255,180,0,0.4); border-radius:14px;
+    background:linear-gradient(135deg,rgba(255,180,0,0.25),rgba(200,100,0,0.35));
+    border:2px solid rgba(255,180,0,0.5); border-radius:14px;
     color:#ffe066; font-size:30px; cursor:pointer;
     user-select:none; -webkit-user-select:none;
     display:flex; align-items:center; justify-content:center; touch-action:none;
     font-family:sans-serif;
+    backdrop-filter:blur(4px);
   }
-  .moveBtn.pressed { background:rgba(255,180,0,0.35); border-color:#ffcc00; box-shadow:0 0 12px rgba(255,180,0,0.4); }
+  .moveBtn.pressed { background:rgba(255,180,0,0.45); border-color:#ffcc00; box-shadow:0 0 12px rgba(255,180,0,0.5); }
 </style>
 </head>
 <body>
@@ -67,10 +74,10 @@
     <p>◀ ▶ 로 이동, 게이트를 통과해<br>군인을 늘리고 몬스터를 쓸어버려라!</p>
     <button class="btn btn-gold" onclick="startGame()">▶ START</button>
   </div>
-</div>
-<div id="controls">
-  <button class="moveBtn" id="btnLeft">◀</button>
-  <button class="moveBtn" id="btnRight">▶</button>
+  <div id="controls">
+    <button class="moveBtn" id="btnLeft">◀</button>
+    <button class="moveBtn" id="btnRight">▶</button>
+  </div>
 </div>
 
 <script>

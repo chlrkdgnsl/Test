@@ -941,10 +941,21 @@ autoOn = !autoOn;
 this.textContent = autoOn ? ‘▶’ : ‘⏸’;
 if (!autoOn) clearTimeout(autoTimer);
 });
-document.getElementById(‘stage’).addEventListener(‘click’, advance);
+// Single unified tap/click handler — avoids double-fire on iOS
+var lastTap = 0;
 document.getElementById(‘stage’).addEventListener(‘touchend’, function(e) {
-e.preventDefault(); advance();
-}, { passive: false });
+var now = Date.now();
+if (now - lastTap < 350) return; // debounce
+lastTap = now;
+// only advance if touch didn’t move (i.e. it’s a tap, not a scroll)
+advance();
+}, false);
+document.getElementById(‘stage’).addEventListener(‘click’, function(e) {
+// on desktop (no touch), fire normally
+// on touch devices touchend already fired — skip to avoid double
+if (Date.now() - lastTap < 350) return;
+advance();
+});
 </script>
 
 </body>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>피노키오 - 원숭이와 토끼</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@400;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+font-family:‘Jua’,sans-serif;
+background:#fdf6e3;
+overflow:hidden;
+width:100vw; height:100vh;
+cursor:pointer;
+user-select:none;
+}
+
+#stage{position:relative;width:100%;height:100%;}
+
+/* ── BACKGROUNDS ── */
+.bg{position:absolute;inset:0;opacity:0;transition:opacity 1s;pointer-events:none;}
+.bg.active{opacity:1;}
+
+/* 0: 마을 */
+#bg0{background:linear-gradient(180deg,#87ceeb 0%,#b8e4ff 55%,#7cb342 55%,#558b2f 100%);}
+/* 1: 꽃밭 숲 */
+#bg1{background:linear-gradient(180deg,#a5d6a7 0%,#66bb6a 45%,#388e3c 45%,#2e7d32 100%);}
+/* 2: 과자집 */
+#bg2{background:linear-gradient(180deg,#ff8f00 0%,#ffa726 40%,#e65100 40%,#bf360c 100%);}
+/* 3: 감옥/어둠 */
+#bg3{background:radial-gradient(ellipse at 50% 40%,#4a148c 0%,#311b92 50%,#1a0033 100%);}
+/* 4: 탈출/밖 */
+#bg4{background:linear-gradient(160deg,#fff9c4 0%,#ffee58 40%,#7cb342 40%,#558b2f 100%);}
+/* 5: 집/해피엔딩 */
+#bg5{background:linear-gradient(180deg,#ff8a65 0%,#ffb74d 45%,#8bc34a 45%,#689f38 100%);}
+
+/* ── SKY ELEMENTS ── */
+.cloud{position:absolute;background:white;border-radius:50px;opacity:0.8;animation:drift linear infinite;}
+@keyframes drift{from{transform:translateX(-150px)}to{transform:translateX(110vw)}}
+
+/* ── TITLE CARD ── */
+#title-card{
+position:absolute;inset:0;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+background:linear-gradient(160deg,#fff8e1,#ffecb3,#ffe082);
+z-index:60;
+transition:opacity 1s;
+}
+#title-card .book-cover{
+background:white;
+border:4px solid #f57c00;
+border-radius:16px;
+padding:30px 40px;
+text-align:center;
+box-shadow:8px 8px 0 #f57c00, 16px 16px 0 rgba(0,0,0,0.1);
+max-width:min(90vw,520px);
+}
+#title-card h1{font-size:clamp(1.8rem,6vw,3.2rem);color:#bf360c;line-height:1.2;margin-bottom:10px;}
+#title-card .sub{font-size:clamp(1rem,3vw,1.5rem);color:#e65100;margin-bottom:20px;}
+#title-card .chars{font-size:clamp(1.5rem,4vw,2.5rem);margin:10px 0;}
+#title-card .tap{font-size:clamp(0.9rem,2.5vw,1.1rem);color:#795548;animation:blink 1.2s infinite alternate;margin-top:20px;}
+@keyframes blink{from{opacity:0.3}to{opacity:1}}
+@keyframes titleBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ── SCENE BANNER ── */
+#scene-banner{
+position:absolute;top:12px;left:50%;transform:translateX(-50%);
+background:rgba(0,0,0,0.65);color:white;
+padding:6px 24px;border-radius:20px;
+font-size:clamp(0.85rem,2.2vw,1.1rem);
+z-index:20;white-space:nowrap;
+backdrop-filter:blur(4px);
+}
+
+/* ── DIALOG BOX ── */
+#dialog{
+position:absolute;bottom:13%;left:50%;transform:translateX(-50%);
+width:min(92%,740px);
+background:rgba(255,255,255,0.97);
+border-radius:22px;
+padding:0;
+z-index:25;
+box-shadow:0 8px 40px rgba(0,0,0,0.22);
+overflow:hidden;
+animation:popIn 0.4s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes popIn{from{transform:translateX(-50%) scale(0.5);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+
+#dialog-header{
+padding:10px 20px 8px;
+font-size:clamp(0.8rem,2vw,1rem);
+font-weight:bold;
+color:white;
+display:flex;align-items:center;gap:8px;
+}
+#dialog-body{
+padding:12px 20px 16px;
+font-family:‘Gaegu’,cursive;
+font-size:clamp(1rem,3vw,1.45rem);
+color:#2d1b00;
+line-height:1.6;
+white-space:pre-wrap;
+}
+
+/* ── TYPEWRITER CURSOR ── */
+#cursor{display:inline-block;width:2px;height:1.2em;background:#e65100;animation:cursorBlink 0.5s infinite alternate;vertical-align:middle;margin-left:2px;}
+@keyframes cursorBlink{from{opacity:0}to{opacity:1}}
+
+/* ── VOICE WAVE ── */
+#voice-wave{
+position:absolute;bottom:calc(13% + 105px);left:50%;transform:translateX(-50%);
+display:flex;gap:3px;align-items:flex-end;height:20px;
+opacity:0;transition:opacity 0.3s;z-index:26;
+}
+#voice-wave.on{opacity:1;}
+#voice-wave span{
+display:block;width:4px;background:#f57c00;border-radius:3px;
+animation:waveBar 0.5s ease-in-out infinite alternate;
+}
+#voice-wave span:nth-child(1){animation-delay:0s}
+#voice-wave span:nth-child(2){animation-delay:0.08s}
+#voice-wave span:nth-child(3){animation-delay:0.16s}
+#voice-wave span:nth-child(4){animation-delay:0.24s}
+#voice-wave span:nth-child(5){animation-delay:0.32s}
+#voice-wave span:nth-child(6){animation-delay:0.16s}
+#voice-wave span:nth-child(7){animation-delay:0.08s}
+@keyframes waveBar{from{height:3px}to{height:18px}}
+
+/* ── CONTROLS ── */
+#controls{
+position:absolute;top:12px;right:12px;
+display:flex;gap:8px;z-index:30;
+}
+.ctrl-btn{
+background:rgba(255,255,255,0.9);
+border:2px solid rgba(0,0,0,0.15);
+border-radius:50%;width:42px;height:42px;
+font-size:1.15rem;cursor:pointer;
+display:flex;align-items:center;justify-content:center;
+box-shadow:0 3px 10px rgba(0,0,0,0.15);
+transition:transform 0.15s;
+}
+.ctrl-btn:hover{transform:scale(1.12);}
+
+/* ── PROGRESS ── */
+#progress{
+position:absolute;bottom:2.5%;left:50%;transform:translateX(-50%);
+display:flex;gap:7px;z-index:28;
+}
+.dot{width:9px;height:9px;border-radius:50%;background:#ddd;border:2px solid #bbb;transition:all 0.3s;}
+.dot.done{background:#f57c00;border-color:#e65100;transform:scale(1.2);}
+
+/* ── NEXT HINT ── */
+#next-hint{
+position:absolute;bottom:5.5%;right:4%;
+font-size:clamp(0.75rem,2vw,0.95rem);
+color:#f57c00;animation:blink 1s infinite alternate;
+z-index:28;pointer-events:none;
+}
+
+/* ── CHARACTERS ── */
+.char{
+position:absolute;bottom:28%;
+transition:left 0.9s cubic-bezier(.25,.46,.45,.94),
+right 0.9s cubic-bezier(.25,.46,.45,.94),
+opacity 0.6s, transform 0.4s;
+}
+.char svg{overflow:visible;}
+
+/* animations */
+.anim-float{animation:floatChar 2.8s ease-in-out infinite;}
+@keyframes floatChar{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.anim-walk{animation:walkChar 0.45s ease-in-out infinite alternate;}
+@keyframes walkChar{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-10px) rotate(2deg)}}
+.anim-shake{animation:shakeChar 0.35s 4;}
+@keyframes shakeChar{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.anim-jump{animation:jumpChar 0.55s ease-in-out 3;}
+@keyframes jumpChar{0%,100%{transform:translateY(0)}50%{transform:translateY(-55px)}}
+.anim-celebrate{animation:celebChar 0.55s ease-in-out infinite;}
+@keyframes celebChar{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.18) rotate(-6deg)}75%{transform:scale(1.18) rotate(6deg)}}
+.anim-scared{animation:scaredChar 0.3s ease-in-out infinite alternate;}
+@keyframes scaredChar{from{transform:scale(0.95) rotate(-2deg)}to{transform:scale(1.05) rotate(2deg)}}
+.anim-angry{animation:angryChar 0.25s ease-in-out infinite alternate;}
+@keyframes angryChar{from{transform:scaleX(0.97) rotate(-1deg)}to{transform:scaleX(1.03) rotate(1deg)}}
+.anim-eat{animation:eatChar 0.6s ease-in-out infinite alternate;}
+@keyframes eatChar{from{transform:translateY(0)}to{transform:translateY(-6px) scale(1.05)}}
+.anim-tip{animation:tipChar 2s ease-in-out infinite;}
+@keyframes tipChar{0%,100%{transform:rotate(0)}30%{transform:rotate(-5deg)}60%{transform:rotate(5deg)}}
+
+/* ── CONFETTI ── */
+.confetti{position:absolute;width:10px;height:14px;border-radius:3px;pointer-events:none;animation:cfFall linear forwards;}
+@keyframes cfFall{0%{transform:translateY(-30px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(800deg);opacity:0}}
+
+/* ── CAGE ── */
+#cage{
+position:absolute;bottom:25%;left:50%;transform:translateX(-50%);
+width:200px;height:180px;
+border:6px solid #555;border-radius:8px;
+background:rgba(0,0,0,0.2);
+display:none;z-index:15;
+}
+#cage::before{content:’’;position:absolute;inset:0;
+background:repeating-linear-gradient(90deg,transparent,transparent 30px,#555 30px,#555 36px);
+border-radius:4px;}
+
+/* ── CANDY HOUSE ── */
+#candy-house{
+position:absolute;bottom:26%;left:50%;transform:translateX(-50%);
+display:none;
+}
+
+/* ── MAGIC BUTTON ── */
+#magic-btn-vis{
+position:absolute;bottom:38%;left:50%;transform:translateX(-50%);
+width:60px;height:60px;background:#4caf50;border-radius:50%;
+border:4px solid #2e7d32;
+display:none;z-index:20;
+box-shadow:0 0 20px #4caf50;
+animation:glowBtn 1s infinite alternate;
+cursor:pointer;
+align-items:center;justify-content:center;
+font-size:1.5rem;
+}
+@keyframes glowBtn{from{box-shadow:0 0 10px #4caf50}to{box-shadow:0 0 30px #4caf50,0 0 50px #a5d6a7}}
+
+/* ── STAR WAND ── */
+.wand-star{display:none;}
+</style>
+
+</head>
+<body>
+<div id="stage">
+
+<!-- BACKGROUNDS -->
+
+<div class="bg active" id="bg0">
+  <div class="cloud" style="width:100px;height:30px;top:10%;animation-duration:25s;animation-delay:-8s">
+    <div style="width:45px;height:45px;background:white;border-radius:50%;position:absolute;top:-22px;left:10px"></div>
+    <div style="width:30px;height:30px;background:white;border-radius:50%;position:absolute;top:-14px;left:46px"></div>
+  </div>
+  <div class="cloud" style="width:75px;height:22px;top:18%;animation-duration:32s;animation-delay:-18s">
+    <div style="width:34px;height:34px;background:white;border-radius:50%;position:absolute;top:-17px;left:8px"></div>
+  </div>
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:30%" viewBox="0 0 800 200" preserveAspectRatio="none">
+    <ellipse cx="400" cy="200" rx="450" ry="120" fill="#558b2f"/>
+    <rect x="60" y="80" width="50" height="80" fill="#795548"/><rect x="40" y="60" width="90" height="25" fill="#e53935"/>
+    <rect x="55" y="110" width="20" height="50" fill="#1565c0"/>
+    <rect x="680" y="70" width="55" height="90" fill="#795548"/><rect x="665" y="50" width="85" height="25" fill="#43a047"/>
+    <rect x="678" y="105" width="22" height="55" fill="#1565c0"/>
+    <!-- flowers -->
+    <circle cx="150" cy="155" r="8" fill="#e91e63"/><line x1="150" y1="163" x2="150" y2="185" stroke="#388e3c" stroke-width="3"/>
+    <circle cx="250" cy="148" r="8" fill="#ff9800"/><line x1="250" y1="156" x2="250" y2="185" stroke="#388e3c" stroke-width="3"/>
+    <circle cx="580" cy="151" r="8" fill="#9c27b0"/><line x1="580" y1="159" x2="580" y2="185" stroke="#388e3c" stroke-width="3"/>
+  </svg>
+</div>
+
+<div class="bg" id="bg1">
+  <!-- flower field -->
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none">
+    <rect x="0" y="330" width="800" height="270" fill="#388e3c"/>
+    <rect x="0" y="310" width="800" height="30" fill="#66bb6a"/>
+    <!-- many flowers -->
+    <circle cx="80" cy="310" r="10" fill="#f06292"/>
+    <circle cx="160" cy="300" r="9" fill="#fff176"/>
+    <circle cx="240" cy="308" r="11" fill="#ff8a65"/>
+    <circle cx="320" cy="302" r="9" fill="#ce93d8"/>
+    <circle cx="400" cy="310" r="10" fill="#80deea"/>
+    <circle cx="480" cy="300" r="9" fill="#f06292"/>
+    <circle cx="560" cy="306" r="11" fill="#fff176"/>
+    <circle cx="640" cy="302" r="9" fill="#ff8a65"/>
+    <circle cx="720" cy="308" r="10" fill="#ce93d8"/>
+    <circle cx="120" cy="295" r="8" fill="#a5d6a7"/>
+    <circle cx="200" cy="298" r="10" fill="#ff8a65"/>
+    <circle cx="500" cy="295" r="8" fill="#fff176"/>
+    <circle cx="600" cy="298" r="10" fill="#f06292"/>
+    <!-- trees -->
+    <rect x="30" y="220" width="14" height="90" fill="#5d4037"/>
+    <polygon points="37,140 0,280 74,280" fill="#2e7d32"/>
+    <rect x="745" y="210" width="14" height="100" fill="#5d4037"/>
+    <polygon points="752,130 718,275 786,275" fill="#1b5e20"/>
+    <!-- path squiggles -->
+    <path d="M300,400 Q350,380 400,410 Q450,440 500,400" stroke="#a1887f" stroke-width="6" fill="none" stroke-dasharray="8,4" opacity="0.5"/>
+  </svg>
+</div>
+
+<div class="bg" id="bg2">
+  <!-- candy house bg -->
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none">
+    <rect x="0" y="320" width="800" height="280" fill="#bf360c"/>
+    <rect x="0" y="300" width="800" height="30" fill="#e64a19"/>
+    <!-- lollipops -->
+    <circle cx="100" cy="270" r="22" fill="#e91e63" stroke="#c2185b" stroke-width="3"/>
+    <line x1="100" y1="292" x2="100" y2="340" stroke="#795548" stroke-width="5"/>
+    <circle cx="700" cy="260" r="22" fill="#1565c0" stroke="#0d47a1" stroke-width="3"/>
+    <line x1="700" y1="282" x2="700" y2="340" stroke="#795548" stroke-width="5"/>
+    <!-- stars in sky -->
+    <circle cx="200" cy="80" r="4" fill="#fff9c4" opacity="0.8"/>
+    <circle cx="400" cy="50" r="3" fill="#fff9c4" opacity="0.6"/>
+    <circle cx="600" cy="90" r="5" fill="#fff9c4" opacity="0.9"/>
+  </svg>
+  <!-- candy house SVG -->
+  <svg id="candy-house-svg" style="position:absolute;bottom:25%;left:50%;transform:translateX(-50%);width:220px;height:190px" viewBox="0 0 220 190">
+    <!-- house body -->
+    <rect x="30" y="90" width="160" height="100" fill="#fce4ec" stroke="#e91e63" stroke-width="3"/>
+    <!-- roof -->
+    <polygon points="110,10 10,100 210,100" fill="#e91e63" stroke="#c2185b" stroke-width="2"/>
+    <!-- candy decorations on roof -->
+    <circle cx="60" cy="75" r="7" fill="#fff176"/>
+    <circle cx="110" cy="40" r="8" fill="#80deea"/>
+    <circle cx="160" cy="75" r="7" fill="#fff176"/>
+    <!-- door -->
+    <rect x="90" y="140" width="40" height="50" rx="20" fill="#795548" stroke="#5d4037" stroke-width="2"/>
+    <!-- windows -->
+    <rect x="40" y="105" width="35" height="30" rx="4" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/>
+    <rect x="145" y="105" width="35" height="30" rx="4" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/>
+    <!-- chimney -->
+    <rect x="145" y="20" width="20" height="40" fill="#ef9a9a"/>
+    <!-- candy cane border -->
+    <rect x="28" y="88" width="164" height="8" fill="#e91e63" rx="3"/>
+    <!-- gingerbread pattern -->
+    <circle cx="60" cy="125" r="5" fill="#ffa726"/>
+    <circle cx="160" cy="125" r="5" fill="#ffa726"/>
+  </svg>
+</div>
+
+<div class="bg" id="bg3">
+  <!-- prison / dark -->
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none">
+    <rect x="0" y="380" width="800" height="220" fill="#1a0033"/>
+    <!-- cage bars -->
+    <rect x="200" y="180" width="400" height="260" rx="8" fill="none" stroke="#7e57c2" stroke-width="6"/>
+    <line x1="267" y1="180" x2="267" y2="440" stroke="#7e57c2" stroke-width="5"/>
+    <line x1="334" y1="180" x2="334" y2="440" stroke="#7e57c2" stroke-width="5"/>
+    <line x1="400" y1="180" x2="400" y2="440" stroke="#7e57c2" stroke-width="5"/>
+    <line x1="467" y1="180" x2="467" y2="440" stroke="#7e57c2" stroke-width="5"/>
+    <line x1="534" y1="180" x2="534" y2="440" stroke="#7e57c2" stroke-width="5"/>
+    <!-- green button -->
+    <circle cx="580" cy="320" r="22" fill="#4caf50" stroke="#2e7d32" stroke-width="4"/>
+    <text x="572" y="326" fill="white" font-size="14" font-weight="bold">▲</text>
+    <!-- stars -->
+    <circle cx="80" cy="100" r="3" fill="#b39ddb" opacity="0.8"/>
+    <circle cx="720" cy="80" r="4" fill="#b39ddb" opacity="0.7"/>
+    <circle cx="400" cy="60" r="3" fill="#b39ddb" opacity="0.6"/>
+  </svg>
+</div>
+
+<div class="bg" id="bg4">
+  <!-- escape outdoor -->
+  <div class="cloud" style="width:90px;height:26px;top:8%;animation-duration:20s">
+    <div style="width:40px;height:40px;background:white;border-radius:50%;position:absolute;top:-20px;left:10px"></div>
+  </div>
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:30%" viewBox="0 0 800 200" preserveAspectRatio="none">
+    <ellipse cx="400" cy="200" rx="450" ry="120" fill="#558b2f"/>
+    <circle cx="400" cy="50" r="80" fill="#fff9c4" opacity="0.5"/>
+  </svg>
+</div>
+
+<div class="bg" id="bg5">
+  <!-- happy home -->
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none">
+    <rect x="0" y="340" width="800" height="260" fill="#558b2f"/>
+    <!-- house -->
+    <rect x="280" y="200" width="240" height="180" fill="#ffe0b2" stroke="#f57c00" stroke-width="3"/>
+    <polygon points="400,100 260,210 540,210" fill="#e53935"/>
+    <rect x="355" y="290" width="90" height="90" rx="5" fill="#795548"/>
+    <rect x="300" y="220" width="60" height="50" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/>
+    <rect x="440" y="220" width="60" height="50" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/>
+    <!-- food table -->
+    <rect x="50" y="310" width="160" height="8" rx="3" fill="#795548"/>
+    <rect x="60" y="318" width="10" height="40" fill="#795548"/>
+    <rect x="190" y="318" width="10" height="40" fill="#795548"/>
+    <!-- healthy food -->
+    <ellipse cx="100" cy="306" rx="18" ry="12" fill="#ef5350"/><!-- tomato -->
+    <ellipse cx="140" cy="304" rx="14" ry="18" fill="#ff9800"/><!-- sweet potato -->
+    <ellipse cx="180" cy="306" rx="16" ry="10" fill="#66bb6a"/><!-- salad -->
+    <!-- sun rays -->
+    <circle cx="680" cy="80" r="55" fill="#fff176" opacity="0.6"/>
+    <line x1="680" y1="15" x2="680" y2="0" stroke="#fff176" stroke-width="6" opacity="0.5"/>
+    <line x1="720" y1="30" x2="740" y2="15" stroke="#fff176" stroke-width="6" opacity="0.5"/>
+    <line x1="735" y1="78" x2="755" y2="70" stroke="#fff176" stroke-width="6" opacity="0.5"/>
+    <line x1="640" y1="30" x2="620" y2="15" stroke="#fff176" stroke-width="6" opacity="0.5"/>
+    <!-- flowers -->
+    <circle cx="180" cy="335" r="8" fill="#f06292"/>
+    <circle cx="590" cy="338" r="8" fill="#fff176"/>
+    <circle cx="620" cy="330" r="7" fill="#e91e63"/>
+  </svg>
+</div>
+
+<!-- TITLE CARD -->
+
+<div id="title-card">
+  <div class="book-cover">
+    <div style="font-size:clamp(2rem,6vw,3.5rem);margin-bottom:8px;animation:titleBounce 1s infinite ease-in-out">🐒🐰🐘</div>
+    <h1>피노키오</h1>
+    <div class="sub">- 원숭이와 토끼의 모험 -</div>
+    <div class="chars">딸이 직접 쓴 그림책 ✏️</div>
+    <div class="tap">👆 탭하면 이야기가 시작돼요!</div>
+  </div>
+</div>
+
+<!-- SCENE BANNER -->
+
+<div id="scene-banner" style="display:none"></div>
+
+<!-- CHARACTERS -->
+
+<!-- 강아지 (파란 옷, 주인공 헨젤) -->
+
+<div class="char anim-float" id="cDog" style="left:-25%;opacity:0">
+<svg width="95" height="135" viewBox="0 0 95 135">
+  <!-- ears -->
+  <ellipse cx="22" cy="42" rx="14" ry="18" fill="#90caf9" transform="rotate(-15,22,42)"/>
+  <ellipse cx="73" cy="42" rx="14" ry="18" fill="#90caf9" transform="rotate(15,73,42)"/>
+  <!-- head -->
+  <circle cx="47" cy="52" r="30" fill="#e3f2fd" stroke="#90caf9" stroke-width="2"/>
+  <!-- eye patches -->
+  <ellipse cx="37" cy="48" rx="10" ry="10" fill="#1565c0"/>
+  <ellipse cx="57" cy="48" rx="10" ry="10" fill="#1565c0"/>
+  <!-- eyes -->
+  <circle cx="37" cy="48" r="6" fill="white"/><circle cx="38" cy="48" r="4" fill="#111"/>
+  <circle cx="57" cy="48" r="6" fill="white"/><circle cx="58" cy="48" r="4" fill="#111"/>
+  <circle cx="39" cy="46" r="1.5" fill="white"/><circle cx="59" cy="46" r="1.5" fill="white"/>
+  <!-- nose -->
+  <ellipse cx="47" cy="60" rx="5" ry="4" fill="#90caf9"/>
+  <!-- mouth -->
+  <path d="M40,66 Q47,73 54,66" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+  <!-- body -->
+  <path d="M22,82 Q47,75 72,82 L78,120 Q47,126 16,120 Z" fill="#1976d2"/>
+  <!-- blue hair -->
+  <path d="M17,35 Q20,15 35,20 Q47,10 60,20 Q75,15 78,35" fill="#1565c0"/>
+  <ellipse cx="25" cy="22" rx="8" ry="12" fill="#1565c0" transform="rotate(-20,25,22)"/>
+  <ellipse cx="69" cy="22" rx="8" ry="12" fill="#1565c0" transform="rotate(20,69,22)"/>
+  <!-- arms -->
+  <ellipse cx="12" cy="93" rx="9" ry="16" fill="#e3f2fd" transform="rotate(-12,12,93)"/>
+  <ellipse cx="82" cy="93" rx="9" ry="16" fill="#e3f2fd" transform="rotate(12,82,93)"/>
+  <!-- legs -->
+  <rect x="28" y="118" width="14" height="22" rx="7" fill="#e3f2fd"/>
+  <rect x="53" y="118" width="14" height="22" rx="7" fill="#e3f2fd"/>
+  <!-- feet -->
+  <ellipse cx="35" cy="141" rx="12" ry="6" fill="#1565c0"/>
+  <ellipse cx="60" cy="141" rx="12" ry="6" fill="#1565c0"/>
+  <!-- star wand (shown sometimes) -->
+  <g id="dogWand" style="display:none">
+    <line x1="82" y1="85" x2="110" y2="55" stroke="#ffd700" stroke-width="3"/>
+    <polygon points="110,55 103,60 110,48 117,60 110,55" fill="#ffd700"/>
+    <circle cx="110" cy="48" r="8" fill="#fff176" opacity="0.7"/>
+  </g>
+</svg>
+</div>
+
+<!-- 고양이 (분홍 옷, 그레텔) -->
+
+<div class="char anim-float" id="cCat" style="left:-25%;opacity:0">
+<svg width="88" height="128" viewBox="0 0 88 128">
+  <!-- ears -->
+  <polygon points="18,30 10,5 30,25" fill="#f48fb1"/>
+  <polygon points="70,30 78,5 58,25" fill="#f48fb1"/>
+  <polygon points="19,28 13,12 27,24" fill="#fce4ec"/>
+  <polygon points="69,28 75,12 61,24" fill="#fce4ec"/>
+  <!-- head -->
+  <circle cx="44" cy="48" r="28" fill="#fce4ec" stroke="#f48fb1" stroke-width="1.5"/>
+  <!-- blush -->
+  <ellipse cx="30" cy="55" rx="8" ry="5" fill="#f06292" opacity="0.4"/>
+  <ellipse cx="58" cy="55" rx="8" ry="5" fill="#f06292" opacity="0.4"/>
+  <!-- eyes (sleepy/cute) -->
+  <path d="M33,43 Q38,39 43,43" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M45,43 Q50,39 55,43" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- nose -->
+  <ellipse cx="44" cy="53" rx="4" ry="3" fill="#f48fb1"/>
+  <!-- whiskers -->
+  <line x1="20" y1="52" x2="36" y2="54" stroke="#aaa" stroke-width="1.2"/>
+  <line x1="20" y1="56" x2="36" y2="56" stroke="#aaa" stroke-width="1.2"/>
+  <line x1="52" y1="54" x2="68" y2="52" stroke="#aaa" stroke-width="1.2"/>
+  <line x1="52" y1="56" x2="68" y2="56" stroke="#aaa" stroke-width="1.2"/>
+  <!-- mouth -->
+  <path d="M38,59 Q44,65 50,59" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- body -->
+  <path d="M20,76 Q44,70 68,76 L73,110 Q44,116 15,110 Z" fill="#f48fb1"/>
+  <!-- bow -->
+  <path d="M36,76 Q44,70 52,76 Q44,82 36,76" fill="#ff80ab"/>
+  <!-- arms -->
+  <ellipse cx="10" cy="86" rx="8" ry="14" fill="#fce4ec" transform="rotate(-10,10,86)"/>
+  <ellipse cx="78" cy="86" rx="8" ry="14" fill="#fce4ec" transform="rotate(10,78,86)"/>
+  <!-- tail -->
+  <path d="M68,100 Q92,90 88,118 Q84,130 75,125" fill="none" stroke="#f48fb1" stroke-width="5" stroke-linecap="round"/>
+  <!-- legs -->
+  <rect x="27" y="110" width="12" height="20" rx="6" fill="#fce4ec"/>
+  <rect x="49" y="110" width="12" height="20" rx="6" fill="#fce4ec"/>
+  <ellipse cx="33" cy="131" rx="11" ry="5" fill="#f48fb1"/>
+  <ellipse cx="55" cy="131" rx="11" ry="5" fill="#f48fb1"/>
+</svg>
+</div>
+
+<!-- 판다 (노란 옷, 친구) -->
+
+<div class="char anim-float" id="cPanda" style="left:-25%;opacity:0">
+<svg width="88" height="128" viewBox="0 0 88 128">
+  <!-- ears -->
+  <circle cx="18" cy="28" r="14" fill="#333"/>
+  <circle cx="70" cy="28" r="14" fill="#333"/>
+  <circle cx="18" cy="28" r="8" fill="#555"/>
+  <circle cx="70" cy="28" r="8" fill="#555"/>
+  <!-- head -->
+  <circle cx="44" cy="50" r="28" fill="white" stroke="#e0e0e0" stroke-width="1.5"/>
+  <!-- big panda eye patches -->
+  <ellipse cx="33" cy="46" rx="11" ry="10" fill="#333" transform="rotate(-10,33,46)"/>
+  <ellipse cx="55" cy="46" rx="11" ry="10" fill="#333" transform="rotate(10,55,46)"/>
+  <!-- eyes -->
+  <circle cx="33" cy="46" r="6" fill="white"/><circle cx="34" cy="46" r="4" fill="#111"/>
+  <circle cx="55" cy="46" r="6" fill="white"/><circle cx="56" cy="46" r="4" fill="#111"/>
+  <circle cx="35" cy="44" r="1.5" fill="white"/><circle cx="57" cy="44" r="1.5" fill="white"/>
+  <!-- nose -->
+  <ellipse cx="44" cy="57" rx="6" ry="4" fill="#555"/>
+  <!-- mouth -->
+  <path d="M37,63 Q44,70 51,63" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+  <!-- body -->
+  <path d="M20,78 Q44,72 68,78 L72,112 Q44,118 16,112 Z" fill="#f9a825"/>
+  <!-- arms -->
+  <ellipse cx="10" cy="88" rx="9" ry="15" fill="#555" transform="rotate(-10,10,88)"/>
+  <ellipse cx="78" cy="88" rx="9" ry="15" fill="#555" transform="rotate(10,78,88)"/>
+  <!-- legs -->
+  <rect x="27" y="112" width="13" height="20" rx="6" fill="#555"/>
+  <rect x="48" y="112" width="13" height="20" rx="6" fill="#555"/>
+  <ellipse cx="33" cy="133" rx="12" ry="6" fill="#333"/>
+  <ellipse cx="54" cy="133" rx="12" ry="6" fill="#333"/>
+  <!-- yellow clothes showing -->
+  <path d="M24,100 Q44,94 64,100 L68,112 Q44,116 20,112 Z" fill="#ffc107"/>
+</svg>
+</div>
+
+<!-- 마녀 토끼 (보라) -->
+
+<div class="char" id="cWitch" style="right:-25%;opacity:0">
+<svg width="110" height="155" viewBox="0 0 110 155">
+  <!-- witch hat -->
+  <ellipse cx="55" cy="48" rx="40" ry="10" fill="#6a1b9a"/>
+  <polygon points="55,0 20,50 90,50" fill="#6a1b9a"/>
+  <polygon points="55,5 25,48 85,48" fill="#7b1fa2"/>
+  <circle cx="55" cy="8" r="7" fill="#e040fb"/>
+  <!-- rabbit ears inside hat -->
+  <ellipse cx="40" cy="30" rx="8" ry="18" fill="#9c27b0"/>
+  <ellipse cx="40" cy="30" rx="4" ry="12" fill="#f8bbd0"/>
+  <ellipse cx="70" cy="30" rx="8" ry="18" fill="#9c27b0"/>
+  <ellipse cx="70" cy="30" rx="4" ry="12" fill="#f8bbd0"/>
+  <!-- head -->
+  <circle cx="55" cy="72" r="30" fill="white" stroke="#ce93d8" stroke-width="1.5"/>
+  <!-- mean eyes -->
+  <ellipse cx="43" cy="68" rx="7" ry="6" fill="#6a1b9a"/>
+  <ellipse cx="67" cy="68" rx="7" ry="6" fill="#6a1b9a"/>
+  <circle cx="43" cy="68" r="4" fill="#111"/><circle cx="67" cy="68" r="4" fill="#111"/>
+  <!-- angry eyebrows -->
+  <path d="M36,61 Q43,57 50,61" fill="none" stroke="#6a1b9a" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M60,61 Q67,57 74,61" fill="none" stroke="#6a1b9a" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- nose -->
+  <ellipse cx="55" cy="76" rx="4" ry="3" fill="#ce93d8"/>
+  <!-- evil smile -->
+  <path d="M44,84 Q55,95 66,84" fill="none" stroke="#6a1b9a" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- body / robe -->
+  <path d="M18,102 Q55,94 92,102 L100,148 Q55,155 10,148 Z" fill="#7b1fa2"/>
+  <!-- cape -->
+  <path d="M18,102 Q5,130 12,155 Q55,145 98,155 Q105,130 92,102" fill="#6a1b9a" opacity="0.6"/>
+  <!-- arms -->
+  <ellipse cx="8" cy="112" rx="10" ry="18" fill="#ce93d8" transform="rotate(-15,8,112)"/>
+  <ellipse cx="102" cy="112" rx="10" ry="18" fill="#ce93d8" transform="rotate(15,102,112)"/>
+  <!-- broom / wand -->
+  <line x1="100" y1="105" x2="130" y2="75" stroke="#795548" stroke-width="4"/>
+  <path d="M122,82 Q135,70 130,75 Q125,80 122,82 Q135,85 130,75" fill="#ff8a65"/>
+</svg>
+</div>
+
+<!-- DIALOG -->
+
+<div id="dialog" style="display:none">
+  <div id="dialog-header"></div>
+  <div id="dialog-body"></div>
+</div>
+
+<div id="voice-wave">
+  <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div id="next-hint" style="display:none">탭해서 계속 ▶</div>
+
+<!-- CONTROLS -->
+
+<div id="controls">
+  <button class="ctrl-btn" id="btnSound" title="음소거">🔊</button>
+  <button class="ctrl-btn" id="btnReplay" title="다시 듣기">🔁</button>
+  <button class="ctrl-btn" id="btnAuto" title="자동 진행">⏸</button>
+</div>
+
+<!-- PROGRESS -->
+
+<div id="progress"></div>
+
+</div><!-- /stage -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SCENE DATA - from daughter's picture book!
+// ═══════════════════════════════════════════════════════
+const scenes = [
+  {bg:0,banner:'🐒 1장: 원숭이와 토끼',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'float',cCat:'float'},speaker:'내레이터',speakerColor:'#4e342e',text:'옛날 옛날에 원숭이와 토끼가 마을에 살고 있었어요.',voice:{pitch:1.0,rate:0.88,volume:1}},
+  {bg:0,banner:'🐒 1장: 원숭이와 토끼',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'float',cCat:'float'},speaker:'토끼 🐰',speakerColor:'#ab47bc',text:'"오호라, 이게 무슨 소리일까요?"\n"혹시 우리 꼬마 손님의 배에서 나는 소리일까요?"',voice:{pitch:1.3,rate:1.0,volume:1}},
+  {bg:0,banner:'🐒 1장: 원숭이와 토끼',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'float',cCat:'float'},speaker:'원숭이 🐒',speakerColor:'#f57c00',text:'"그럼, 제가 아~주 맛있는 식사를 대접할까요?"\n"어~? 놀이터로 가야 하는데?"\n"아! 지금 안 먹으면 배에서 소리가 들려요. 정말 맛있거든!"\n"그럼, 음식을 먹고 갈까?"\n"잠깐만 기다려봐~ 호이, 얌얌얌! 다 됐어요!"',voice:{pitch:1.35,rate:1.0,volume:1}},
+  {bg:1,banner:'🐘 2장: 코끼리 아저씨 레스토랑',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'62%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'float',cCat:'float',cPanda:'float'},speaker:'내레이터',speakerColor:'#4e342e',text:'코끼리 아저씨 레스토랑에 도착했어요.\n"안녕하세요! 코끼리 아저씨!"\n"무슨 일이야?"\n"아주 귀여운 꼬마 손님을 모시고 왔어요."\n"잘 봐요! 주황색 원숭이랑, 보라색 토끼예요!"\n"어디, 어디? 주황 원숭이랑 보라 토끼가 왔어!"',voice:{pitch:1.0,rate:0.9,volume:1}},
+  {bg:1,banner:'🐘 2장: 코끼리 아저씨 레스토랑',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'62%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'eat',cCat:'eat',cPanda:'float'},speaker:'코끼리 아저씨 🐘',speakerColor:'#546e7a',text:'"지금 게임에 돈이 필요하거든."\n"이 코끼리 아저씨가 엄청 맛있는 음식으로 대접한다. 맞지?"\n"응, 그래? 들어와."\n"들어가지."\n"와!"\n"너희들 케어 준비했어."',voice:{pitch:0.8,rate:0.92,volume:1}},
+  {bg:1,banner:'🐘 2장: 코끼리 아저씨 레스토랑',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'62%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'eat',cCat:'eat',cPanda:'float'},speaker:'원숭이 🐒',speakerColor:'#f57c00',text:'"와! 맛있겠다."\n"여, 그런데, 가는?"\n"아~ 집으로 돌아간다. 신경 쓰지 말고 마음껏 들거라."\n"히힛, 먹자."\n"냠냠냠냠냠냠."\n"꿀꿀꿀."\n"컵, 냠냠."',voice:{pitch:1.35,rate:1.0,volume:1}},
+  {bg:1,banner:'🐘 2장: 밥값 소동',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'62%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'scared',cCat:'scared',cPanda:'float'},speaker:'코끼리 아저씨 🐘',speakerColor:'#546e7a',text:'"이제 어지간히 먹은 것 같구나."\n"어?"\n"그럼 내일 아침을 위한 연습을 시작할까?"\n"연습? 우린 밥을 먹었으니 놀이터로 갈게요."\n"놀이터? 없어!"\n"돌아가기 전에 너희가 먹은 밥값은 내야지!"\n"밥값?" "밥값?"\n"그게 아니고, 밥 값!"\n"그렇지! 흐흐흐흐흐.."',voice:{pitch:0.8,rate:1.0,volume:1}},
+  {bg:2,banner:'🔒 3장: 감옥에 갇히다',chars:{cDog:{x:'22%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'65%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'scared',cCat:'scared',cPanda:'angry'},speaker:'원숭이 🐒',speakerColor:'#f57c00',text:'"들어가!"\n"놔줘요."\n"비싼 밥을 먹었으면 밥값을 내야지!"\n"밥값을 드릴게요."',voice:{pitch:1.35,rate:1.1,volume:1}},
+  {bg:2,banner:'🔒 3장: 거짓말과 긴 코',chars:{cDog:{x:'22%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'65%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'scared',cCat:'scared',cPanda:'angry'},speaker:'코끼리 아저씨 🐘',speakerColor:'#546e7a',text:'"그, 그게 정말이야?"\n"네! 저 돈 많아요!", 어? 코가 왜이러지?\n"그 많은 돈이 어디 있는데?"\n"어.. 어디냐면, 맞다! 기스 트럭이 있어요."\n"오호, 거짓말을 하면 코가 길어지잖아. 기스 차에 얼마나 있는데?"\n"어.. 얼마냐면, 교실을 채울 만큼 있어요!"\n"하하하하. 교실이라면, 재미있군. 이걸로 내일 공연을 할 수 있겠어. 아침이 보자꾸나."',voice:{pitch:0.8,rate:0.92,volume:1}},
+  {bg:2,banner:'🔒 3장: 탈출!',chars:{cDog:{x:'22%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'celebrate',cCat:'celebrate'},speaker:'원숭이 🐒',speakerColor:'#f57c00',text:'"토끼야, 우리도 할 수 있어. 와! 멋지다. 문을 열어볼까?"\n"그럴까?"\n원숭이와 토끼가 드디어 나왔어요!\n"도끼야! 뛰어!"\n"이녀석들! 놓치지 않겠다!"',voice:{pitch:1.35,rate:1.15,volume:1}},
+  {bg:3,banner:'🎪 4장: 서커스장으로!',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'walk',cCat:'walk'},speaker:'내레이터',speakerColor:'#4e342e',text:'"토끼야, 우리 이제 살았어."\n"너희! 어! 저 서커스장으로 가는 주황 원숭이랑 보라 토끼, 다시 왔군!"\n"그게..."\n"그럼 내가 데리고 나와줄게."\n"맛있는 레스토랑으로 가자."\n"야호! 신난다."\n"자 이제 출발합니다."',voice:{pitch:1.0,rate:0.9,volume:1}},
+  {bg:3,banner:'🎪 4장: 서커스장으로!',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'62%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'eat',cCat:'eat',cPanda:'float'},speaker:'코끼리 아저씨 🐘',speakerColor:'#546e7a',text:'"참가자들, 열심히 하자."\n"이제부터 다시 출발하자."\n"그럼, 집에 갈 수 있어요?"\n"그럼 더 열심히 하자."\n"구운하신 음식 나왔습니다."\n"야오! 맛있겠다."\n"잠깐! 어디보자... 으흠, 맛있네! 너희도 먹어."',voice:{pitch:0.8,rate:0.92,volume:1}},
+  {bg:3,banner:'🎪 4장: 기스가 혼자 먹다',chars:{cDog:{x:'15%',op:1},cCat:{x:'38%',op:1},cPanda:{x:'62%',op:1},cWitch:{x:'-20%',op:0}},anim:{cDog:'scared',cCat:'float',cPanda:'angry'},speaker:'내레이터',speakerColor:'#4e342e',text:'기스는 원숭이와 토끼를 빼놓고 음식을 혼자 배불리 먹었어요.\n"나도 먹고 싶었는데."\n"어우, 잘 먹었다."\n"어서 타!"\n"배불리 먹었으면 돈을 내야지."\n"자, 출발하자."',voice:{pitch:1.0,rate:0.9,volume:1}},
+  {bg:4,banner:'⛵ 5장: 파란 배를 타고',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'float',cCat:'float'},speaker:'원숭이 🐒',speakerColor:'#f57c00',text:'"에! 파란 배다. 어서 타."\n"그럴까?"\n"자, 이제 출발합니다."\n"저건, 내 배잖아! 이봐! 그건 내 배야! 어디로 가는 거야! 도둑이야! 도둑이야!"\n"혹시, 이 주황 원숭이를 못 봤어요?"\n"주황 원숭이? 주황 원숭이는 내 배를 가져갔습니다."\n"배 좀 빌리겠습니다."',voice:{pitch:1.35,rate:1.0,volume:1}},
+  {bg:4,banner:'⛵ 5장: 폭풍 속에서',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'scared',cCat:'scared'},speaker:'원숭이 🐒',speakerColor:'#f57c00',text:'"이봐요! 이봐요! 지금은 파도가 너무 높아서 배 타는 건 위험해요."\n"그래도 가봐요. 주황 원숭이가 내 배를 타고가고 있어요."\n"원숭이야! 원숭이야! 원숭이야!"\n"내 엄마 소리가 들려요. 빠빠빠빠."\n"네 오빠 토끼가 부르고 있어."',voice:{pitch:1.35,rate:1.1,volume:1}},
+  {bg:4,banner:'⛵ 5장: 엄마를 만나다',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'scared',cCat:'scared'},speaker:'토끼 🐰',speakerColor:'#ab47bc',text:'"나를 놔줘."\n"엄마에게 보내줘."\n"네 오빠한테 보내줘."\n"어... 무서운 거야?"\n"빨리 저리가. 으악."\n"너도 가! 으악."\n"애들아."\n"오빠!" "엄마."',voice:{pitch:1.3,rate:1.0,volume:1}},
+  {bg:5,banner:'🌟 6장: 반성하고 진짜 원숭이가 되다',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'celebrate',cCat:'celebrate'},speaker:'내레이터',speakerColor:'#4e342e',text:'"으악."\n"엄마, 제일 눈는 여요."\n"원히 엄마가 정산을 차렸어!"\n"다행이다."\n"엄마 말씀 안 듣고, 놀이터도 난 가고 엉뚱한 일을 했어요. 이제 엄마 말씀 잘 듣고 거짓말하지 않을게요."\n"피노키오 원숭이야"\n"네?"\n"엄마 말씀 잘 듣고 거짓말하지 않고, 착하구나. 선물을 줘."\n"와! 정말 원숭이가 됐구나."',voice:{pitch:1.0,rate:0.88,volume:1}},
+  {bg:5,banner:'🌟 6장: 해피엔딩!',chars:{cDog:{x:'20%',op:1},cCat:{x:'45%',op:1},cPanda:{x:'-20%',op:0},cWitch:{x:'-20%',op:0}},anim:{cDog:'celebrate',cCat:'celebrate'},speaker:'모두 함께 🎊',speakerColor:'#e65100',text:'"정말 다행이다."\n"아, 맞다. 그 거리의 기스는 어떻게 됐어?"\n"나도 잘 모르겠는데?"\n"어휴, 겨우 살았네. 어떡지 들을까?"\n"하하하~"\n"어? 하하."\n"어? 뭘하냐?"\n"어, 자자자잠깐만! 도망가자!"\n토끼와 원숭이가 행복하게 살았답니다.',voice:{pitch:1.2,rate:0.95,volume:1}}
+];
+
+// ═══════════════════════════════════════════════════════
+// ENGINE
+// ═══════════════════════════════════════════════════════
+const totalSteps = scenes.length;
+let step = -1;
+let soundOn = true;
+let autoPlay = false;
+let autoTimer = null;
+let speaking = false;
+
+// build dots
+const progEl = document.getElementById('progress');
+for(let i=0;i<totalSteps;i++){
+  const d=document.createElement('div'); d.className='dot'; progEl.appendChild(d);
+}
+const dots = progEl.querySelectorAll('.dot');
+
+const titleCard = document.getElementById('title-card');
+const bannerEl  = document.getElementById('scene-banner');
+const dialogEl  = document.getElementById('dialog');
+const headerEl  = document.getElementById('dialog-header');
+const bodyEl    = document.getElementById('dialog-body');
+const hintEl    = document.getElementById('next-hint');
+const waveEl    = document.getElementById('voice-wave');
+const btnSound  = document.getElementById('btnSound');
+const btnReplay = document.getElementById('btnReplay');
+const btnAuto   = document.getElementById('btnAuto');
+
+const chars = {
+  cDog:   document.getElementById('cDog'),
+  cCat:   document.getElementById('cCat'),
+  cPanda: document.getElementById('cPanda'),
+  cWitch: document.getElementById('cWitch'),
+};
+const bgs = [0,1,2,3,4,5].map(i=>document.getElementById('bg'+i));
+
+// speaker colors / emoji
+const speakerMeta = {
+  '강아지 🐶':     { bg:'#1565c0', emoji:'🐶' },
+  '고양이 🐱':     { bg:'#c2185b', emoji:'🐱' },
+  '판다 🐼':       { bg:'#e65100', emoji:'🐼' },
+  '마녀 토끼 🐰':  { bg:'#6a1b9a', emoji:'🐰' },
+  '내레이터':      { bg:'#4e342e', emoji:'📖' },
+  '모두 함께 🎊':  { bg:'#e65100', emoji:'🎊' },
+};
+
+// ── TTS ──
+let koVoice = null;
+function loadVoices(){
+  const vs = speechSynthesis.getVoices();
+  koVoice = vs.find(v=>v.lang==='ko-KR') || vs.find(v=>v.lang.startsWith('ko')) || vs[0] || null;
+}
+loadVoices();
+if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=loadVoices;
+
+function speak(text, vParams, onDone){
+  if(!soundOn){ if(onDone) onDone(); return; }
+  speechSynthesis.cancel();
+  // clean text for TTS
+  const clean = text.replace(/[🎉🌸🍬🔮🌟🏠🎊📖🐶🐱🐼🐰🐾⭐]/g,'').replace(/\n/g,' ').trim();
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.lang   = 'ko-KR';
+  utt.voice  = koVoice;
+  utt.pitch  = vParams.pitch;
+  utt.rate   = vParams.rate;
+  utt.volume = vParams.volume;
+
+  utt.onstart = ()=>{ speaking=true; waveEl.classList.add('on'); };
+  utt.onend   = ()=>{ speaking=false; waveEl.classList.remove('on'); if(onDone) onDone(); };
+  utt.onerror = ()=>{ speaking=false; waveEl.classList.remove('on'); if(onDone) onDone(); };
+
+  speechSynthesis.speak(utt);
+}
+
+function stopSpeech(){
+  speechSynthesis.cancel();
+  speaking=false;
+  waveEl.classList.remove('on');
+}
+
+// ── ANIMATIONS ──
+const animList = ['float','walk','shake','jump','celebrate','scared','angry','eat','tip'];
+function setAnim(el, anim){
+  animList.forEach(a => el.classList.remove('anim-'+a));
+  if(anim) el.classList.add('anim-'+anim);
+}
+
+// ── CONFETTI ──
+function confetti(){
+  const cols=['#f44336','#e91e63','#9c27b0','#2196f3','#4caf50','#ffeb3b','#ff9800','#00bcd4'];
+  for(let i=0;i<55;i++){
+    const c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=cols[Math.floor(Math.random()*cols.length)];
+    c.style.animationDuration=(1.8+Math.random()*2.5)+'s';
+    c.style.animationDelay=(Math.random()*2)+'s';
+    c.style.width=(8+Math.random()*8)+'px';
+    c.style.height=(12+Math.random()*10)+'px';
+    document.getElementById('stage').appendChild(c);
+    setTimeout(()=>c.remove(), 5000);
+  }
+}
+
+// ── AUTO PLAY ──
+function scheduleAuto(delay){
+  clearTimeout(autoTimer);
+  if(autoPlay) autoTimer = setTimeout(()=>advance(), delay);
+}
+
+// ── ADVANCE ──
+function advance(){
+  clearTimeout(autoTimer);
+  stopSpeech();
+
+  if(step===-1){
+    titleCard.style.opacity='0';
+    setTimeout(()=>titleCard.style.display='none',900);
+    bannerEl.style.display='block';
+    dialogEl.style.display='block';
+    hintEl.style.display='block';
+    step=0;
+  } else {
+    step++;
+  }
+
+  if(step>=totalSteps){
+    step=-1;
+    titleCard.style.display='flex';
+    setTimeout(()=>titleCard.style.opacity='1',10);
+    bannerEl.style.display='none';
+    dialogEl.style.display='none';
+    hintEl.style.display='none';
+    dots.forEach(d=>d.classList.remove('done'));
+    Object.values(chars).forEach(c=>{ c.style.opacity='0'; c.style.left='-25%'; });
+    return;
+  }
+
+  const sc = scenes[step];
+
+  // bg switch
+  bgs.forEach((b,i)=>b.classList.toggle('active', i===sc.bg));
+
+  // chars
+  Object.entries(sc.chars).forEach(([id,cfg])=>{
+    const el=chars[id];
+    el.style.opacity=cfg.op;
+    if(cfg.x!==undefined) el.style.left=cfg.x;
+    if(cfg.right!==undefined){ el.style.left='auto'; el.style.right=cfg.right; }
+  });
+
+  // animations (delayed for transition)
+  setTimeout(()=>{
+    Object.keys(chars).forEach(id=>{
+      const anim = sc.anim && sc.anim[id] ? sc.anim[id] : '';
+      setAnim(chars[id], anim);
+    });
+  }, 500);
+
+  // dialog
+  const meta = speakerMeta[sc.speaker] || {bg:'#5d4037', emoji:'📖'};
+  headerEl.style.background = sc.speakerColor || meta.bg;
+  headerEl.innerHTML = `<span>${meta.emoji}</span> <span>${sc.speaker}</span>`;
+  bodyEl.textContent = '';
+  dialogEl.style.animation='none'; void dialogEl.offsetWidth;
+  dialogEl.style.animation='popIn 0.4s cubic-bezier(.175,.885,.32,1.275)';
+
+  // typewriter effect
+  const fullText = sc.text;
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.id='cursor';
+  bodyEl.appendChild(cursor);
+  const typeInterval = setInterval(()=>{
+    if(i<fullText.length){
+      cursor.before(fullText[i]);
+      i++;
+    } else {
+      clearInterval(typeInterval);
+      cursor.remove();
+    }
+  }, 45);
+
+  // voice
+  setTimeout(()=>{
+    speak(sc.text, sc.voice, ()=>{
+      // after speech done, schedule auto if on
+      scheduleAuto(1200);
+    });
+  }, 350);
+
+  // confetti on final scene
+  if(sc.bg===5 && step===totalSteps-1) setTimeout(confetti,500);
+
+  // dots
+  dots.forEach((d,i)=>d.classList.toggle('done', i<=step));
+}
+
+// ── CONTROLS ──
+btnSound.addEventListener('click',e=>{
+  e.stopPropagation();
+  soundOn=!soundOn;
+  btnSound.textContent = soundOn ? '🔊' : '🔇';
+  if(!soundOn) stopSpeech();
+  else if(step>=0&&step<totalSteps) speak(scenes[step].text, scenes[step].voice, ()=>scheduleAuto(1200));
+});
+
+btnReplay.addEventListener('click',e=>{
+  e.stopPropagation();
+  if(step>=0&&step<totalSteps){
+    stopSpeech();
+    speak(scenes[step].text, scenes[step].voice, ()=>scheduleAuto(1200));
+    btnReplay.style.transform='rotate(360deg) scale(0.85)';
+    setTimeout(()=>btnReplay.style.transform='',300);
+  }
+});
+
+btnAuto.addEventListener('click',e=>{
+  e.stopPropagation();
+  autoPlay=!autoPlay;
+  btnAuto.textContent = autoPlay ? '▶' : '⏸';
+  if(autoPlay && !speaking) scheduleAuto(800);
+  else clearTimeout(autoTimer);
+});
+
+document.getElementById('stage').addEventListener('click', advance);
+</script>
+
+</body>
+</html>

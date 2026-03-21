@@ -3,14 +3,13 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>아기 돼지 삼형제 🐷🐷🐷</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아기 돼지 삼형제</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Jua',sans-serif;overflow:hidden;width:100vw;height:100vh;cursor:pointer;user-select:none;-webkit-user-select:none;background:#ffecd2;}
-#stage{position:relative;width:100%;height:100%;overflow:hidden;}
-
+body{font-family:'Jua',sans-serif;background:#fdf6e3;overflow:hidden;width:100vw;height:100vh;cursor:pointer;user-select:none;}
+#stage{position:relative;width:100%;height:100%;}
 .bg{position:absolute;inset:0;opacity:0;transition:opacity 1s;pointer-events:none;}
 .bg.active{opacity:1;}
 #bg0{background:linear-gradient(180deg,#ffecd2 0%,#fcb69f 42%,#7cb342 42%,#558b2f 100%);}
@@ -19,928 +18,176 @@ body{font-family:'Jua',sans-serif;overflow:hidden;width:100vw;height:100vh;curso
 #bg3{background:linear-gradient(180deg,#9575cd 0%,#7e57c2 42%,#4a148c 42%,#311b92 100%);}
 #bg4{background:linear-gradient(180deg,#bf360c 0%,#e64a19 40%,#7f0000 40%,#4a0000 100%);}
 #bg5{background:linear-gradient(180deg,#fff9c4 0%,#ffee58 44%,#8bc34a 44%,#558b2f 100%);}
-
-/* clouds */
-.cloud{position:absolute;background:white;border-radius:60px;animation:cDrift linear infinite;}
-@keyframes cDrift{from{transform:translateX(-200px)}to{transform:translateX(110vw)}}
-
-/* ground decoration */
-.ground{position:absolute;bottom:0;left:0;width:100%;height:30%;pointer-events:none;}
-
-/* TITLE */
-#title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-background:linear-gradient(160deg,#fff8e1,#ffecb3,#ffe082);z-index:70;transition:opacity 0.8s;}
-.cover{background:white;border:5px solid #f57c00;border-radius:20px;padding:28px 36px;text-align:center;
-box-shadow:7px 7px 0 #f57c00,14px 14px 0 rgba(0,0,0,0.07);max-width:min(88vw,480px);}
-.cover h1{font-size:clamp(1.9rem,7vw,3.5rem);color:#bf360c;line-height:1.2;margin-bottom:8px;
-animation:hBob 1s ease-in-out infinite alternate;}
-@keyframes hBob{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-.cover .sub{font-size:clamp(1rem,3vw,1.4rem);color:#e65100;margin-bottom:14px;}
-.cover .tap{font-size:clamp(0.9rem,2.5vw,1.1rem);color:#795548;animation:pulse 1s infinite alternate;margin-top:14px;}
-@keyframes pulse{from{opacity:0.3}to{opacity:1}}
-
-/* BANNER */
-#banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);
-background:rgba(0,0,0,0.68);color:white;padding:7px 24px;border-radius:20px;
-font-size:clamp(0.85rem,2.2vw,1.05rem);z-index:30;white-space:nowrap;display:none;}
-
-/* DIALOG */
-#dialog{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);
-width:min(92%,740px);background:rgba(255,255,255,0.97);border-radius:20px;overflow:hidden;
-box-shadow:0 10px 45px rgba(0,0,0,0.28);z-index:28;display:none;
-animation:dPop 0.4s cubic-bezier(.175,.885,.32,1.275);}
-@keyframes dPop{from{transform:translateX(-50%) scale(0.4);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
-#dhead{padding:10px 20px 8px;color:white;font-size:clamp(0.85rem,2vw,1rem);display:flex;align-items:center;gap:8px;}
-#dbody{padding:14px 20px 18px;font-family:‘Gaegu’,cursive;font-size:clamp(1rem,3vw,1.45rem);color:#1a0000;line-height:1.65;white-space:pre-wrap;}
-
-/* cursor */
-#cur{display:inline-block;width:2px;height:1.1em;background:#e65100;margin-left:2px;vertical-align:middle;animation:cb 0.5s steps(1) infinite;}
-@keyframes cb{0%,100%{opacity:1}50%{opacity:0}}
-
-/* voice wave */
-#vw{position:absolute;bottom:calc(12% + 108px);left:50%;transform:translateX(-50%);
-display:flex;gap:3px;align-items:flex-end;height:20px;opacity:0;transition:opacity 0.3s;z-index:29;}
-#vw.on{opacity:1;}
-#vw span{display:block;width:4px;background:#f57c00;border-radius:3px;animation:wb 0.45s ease-in-out infinite alternate;}
-#vw span:nth-child(1){animation-delay:0s}#vw span:nth-child(2){animation-delay:.07s}
-#vw span:nth-child(3){animation-delay:.14s}#vw span:nth-child(4){animation-delay:.21s}
-#vw span:nth-child(5){animation-delay:.28s}#vw span:nth-child(6){animation-delay:.14s}
-#vw span:nth-child(7){animation-delay:.07s}
-@keyframes wb{from{height:3px}to{height:18px}}
-
-/* controls */
-#ctrls{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:40;}
-.cb{background:rgba(255,255,255,0.92);border:2px solid rgba(0,0,0,0.1);border-radius:50%;
-width:44px;height:44px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
-box-shadow:0 3px 10px rgba(0,0,0,0.15);transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
-.cb:active{transform:scale(0.88);}
-
-/* progress */
-#prog{position:absolute;bottom:2.5%;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:30;}
+.cloud{position:absolute;background:white;border-radius:60px;animation:cloudDrift linear infinite;}
+@keyframes cloudDrift{from{transform:translateX(-200px)}to{transform:translateX(110vw)}}
+#title-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#fff8e1,#ffecb3,#ffe082);z-index:60;transition:opacity 1s;}
+.book-cover{background:white;border:5px solid #f57c00;border-radius:20px;padding:30px 44px;text-align:center;box-shadow:8px 8px 0 #f57c00,16px 16px 0 rgba(0,0,0,0.07);max-width:min(90vw,500px);}
+.book-cover h1{font-size:clamp(1.8rem,6vw,3.2rem);color:#bf360c;line-height:1.2;margin-bottom:10px;}
+.book-cover .sub{font-size:clamp(1rem,3vw,1.4rem);color:#e65100;margin-bottom:16px;}
+.book-cover .tap{font-size:clamp(0.9rem,2.5vw,1.1rem);color:#795548;animation:blink 1.2s infinite alternate;margin-top:16px;}
+@keyframes blink{from{opacity:0.3}to{opacity:1}}
+@keyframes titleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#scene-banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:white;padding:6px 24px;border-radius:20px;font-size:clamp(0.85rem,2.2vw,1.1rem);z-index:20;white-space:nowrap;}
+#dialog{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);width:min(92%,740px);background:rgba(255,255,255,0.97);border-radius:22px;padding:0;z-index:25;box-shadow:0 8px 40px rgba(0,0,0,0.22);overflow:hidden;animation:popIn 0.4s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes popIn{from{transform:translateX(-50%) scale(0.5);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+#dialog-header{padding:10px 20px 8px;font-size:clamp(0.8rem,2vw,1rem);font-weight:bold;color:white;display:flex;align-items:center;gap:8px;}
+#dialog-body{padding:12px 20px 16px;font-family:'Gaegu',cursive;font-size:clamp(1rem,3vw,1.45rem);color:#2d1b00;line-height:1.6;white-space:pre-wrap;}
+#cursor{display:inline-block;width:2px;height:1.2em;background:#e65100;animation:curBlink 0.5s infinite alternate;vertical-align:middle;margin-left:2px;}
+@keyframes curBlink{from{opacity:0}to{opacity:1}}
+#voice-wave{position:absolute;bottom:calc(13% + 105px);left:50%;transform:translateX(-50%);display:flex;gap:3px;align-items:flex-end;height:20px;opacity:0;transition:opacity 0.3s;z-index:26;}
+#voice-wave.on{opacity:1;}
+#voice-wave span{display:block;width:4px;background:#f57c00;border-radius:3px;animation:waveBar 0.5s ease-in-out infinite alternate;}
+#voice-wave span:nth-child(1){animation-delay:0s}#voice-wave span:nth-child(2){animation-delay:0.08s}#voice-wave span:nth-child(3){animation-delay:0.16s}#voice-wave span:nth-child(4){animation-delay:0.24s}#voice-wave span:nth-child(5){animation-delay:0.32s}
+@keyframes waveBar{from{height:3px}to{height:18px}}
+#controls{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:30;}
+.ctrl-btn{background:rgba(255,255,255,0.9);border:2px solid rgba(0,0,0,0.15);border-radius:50%;width:42px;height:42px;font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.15);}
+#progress{position:absolute;bottom:2.5%;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:28;}
 .dot{width:9px;height:9px;border-radius:50%;background:#ddd;border:2px solid #bbb;transition:all 0.3s;}
-.dot.on{background:#f57c00;border-color:#e65100;transform:scale(1.25);}
-
-/* hint */
-#hint{position:absolute;bottom:5.5%;right:4%;font-size:clamp(0.75rem,2vw,0.95rem);color:#f57c00;
-animation:pulse 1s infinite alternate;z-index:30;pointer-events:none;display:none;}
-
-/* CHARACTERS */
-.ch{position:absolute;bottom:28%;transition:left 0.9s cubic-bezier(.25,.46,.45,.94),opacity 0.6s;}
-.ch svg{overflow:visible;}
-
-/* houses */
+.dot.done{background:#f57c00;border-color:#e65100;transform:scale(1.2);}
+#next-hint{position:absolute;bottom:5.5%;right:4%;font-size:clamp(0.75rem,2vw,0.95rem);color:#f57c00;animation:blink 1s infinite alternate;z-index:28;pointer-events:none;}
+.char-wrap{position:absolute;bottom:28%;transition:left 0.9s cubic-bezier(.25,.46,.45,.94),right 0.9s,opacity 0.6s;}
+.char-wrap svg{overflow:visible;}
 .house{position:absolute;bottom:27%;display:none;}
-
-/* WIND */
-#wind{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 0.4s;}
-#wind.on{opacity:1;}
-.wl{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.65),transparent);
-border-radius:2px;animation:wm linear infinite;}
-@keyframes wm{from{transform:translateX(-200px)}to{transform:translateX(110vw)}}
-
-/* FIRE emoji */
-#fire{position:absolute;bottom:30%;right:18%;font-size:3.5rem;display:none;
-animation:ff 0.3s infinite alternate;}
-@keyframes ff{from{transform:scaleY(1) rotate(-3deg)}to{transform:scaleY(1.18) rotate(3deg)}}
-
-/* CHAR ANIMATIONS */
-.af{animation:aFloat 2.8s ease-in-out infinite;}
-@keyframes aFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-.aw{animation:aWalk 0.45s ease-in-out infinite alternate;}
-@keyframes aWalk{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-10px) rotate(2deg)}}
-.as_sc{animation:aSc 0.28s ease-in-out infinite alternate;}
-@keyframes aSc{from{transform:scale(0.94) rotate(-2deg)}to{transform:scale(1.06) rotate(2deg)}}
-.as_an{animation:aAn 0.22s ease-in-out infinite alternate;}
-@keyframes aAn{from{transform:scaleX(0.96)}to{transform:scaleX(1.04)}}
-.aj{animation:aJump 0.55s ease-in-out 3;}
-@keyframes aJump{0%,100%{transform:translateY(0)}50%{transform:translateY(-58px)}}
-.ac{animation:aCel 0.55s ease-in-out infinite;}
-@keyframes aCel{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.18) rotate(-6deg)}75%{transform:scale(1.18) rotate(6deg)}}
-.ar{animation:aRun 0.3s ease-in-out infinite alternate;}
-@keyframes aRun{from{transform:translateY(-4px) rotate(-4deg)}to{transform:translateY(-14px) rotate(4deg)}}
-.am{animation:aMag 0.5s ease-in-out infinite alternate;}
-@keyframes aMag{from{transform:rotate(-8deg) scale(0.97)}to{transform:rotate(8deg) scale(1.03)}}
-
-/* CONFETTI */
-.cf{position:absolute;border-radius:3px;pointer-events:none;animation:cfF linear forwards;}
-@keyframes cfF{0%{transform:translateY(-40px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(800deg);opacity:0}}
-
-/* SCREEN SHAKE */
-@keyframes sShake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,3px)}60%{transform:translate(4px,-2px)}}
-.shake{animation:sShake 0.35s ease-in-out 2;}
-
-/* STAR */
-.sb{position:absolute;pointer-events:none;animation:sbA 0.6s ease-out forwards;font-size:2.5rem;}
-@keyframes sbA{0%{transform:scale(0);opacity:1}100%{transform:scale(2.5);opacity:0}}
+#wind-lines{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 0.5s;}
+#wind-lines.active{opacity:1;}
+.wind-line{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);border-radius:2px;animation:windMove linear infinite;}
+@keyframes windMove{from{transform:translateX(-200px)}to{transform:translateX(110vw)}}
+#fire-anim{position:absolute;bottom:28%;right:20%;font-size:4rem;display:none;animation:fireFlick 0.3s infinite alternate;}
+@keyframes fireFlick{from{transform:scaleY(1) rotate(-3deg)}to{transform:scaleY(1.15) rotate(3deg)}}
+.anim-float{animation:floatChar 2.8s ease-in-out infinite;}
+@keyframes floatChar{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.anim-scared{animation:scaredChar 0.3s ease-in-out infinite alternate;}
+@keyframes scaredChar{from{transform:scale(0.95) rotate(-2deg)}to{transform:scale(1.05) rotate(2deg)}}
+.anim-angry{animation:angryChar 0.25s ease-in-out infinite alternate;}
+@keyframes angryChar{from{transform:scaleX(0.97)}to{transform:scaleX(1.03)}}
+.anim-jump{animation:jumpChar 0.55s ease-in-out 3;}
+@keyframes jumpChar{0%,100%{transform:translateY(0)}50%{transform:translateY(-55px)}}
+.anim-celebrate{animation:celebChar 0.55s ease-in-out infinite;}
+@keyframes celebChar{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.18) rotate(-6deg)}75%{transform:scale(1.18) rotate(6deg)}}
+.anim-run{animation:runChar 0.3s ease-in-out infinite alternate;}
+@keyframes runChar{from{transform:translateY(-4px) rotate(-4deg)}to{transform:translateY(-14px) rotate(4deg)}}
+.anim-magic{animation:magicChar 0.5s ease-in-out infinite alternate;}
+@keyframes magicChar{from{transform:rotate(-8deg) scale(0.97)}to{transform:rotate(8deg) scale(1.03)}}
+.confetti{position:absolute;border-radius:3px;pointer-events:none;animation:cfFall linear forwards;}
+@keyframes cfFall{0%{transform:translateY(-30px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(800deg);opacity:0}}
 </style>
-
 </head>
 <body>
 <div id="stage">
-
-<!-- BACKGROUNDS -->
-
-<div class="bg active" id="bg0">
-  <svg class="ground" viewBox="0 0 800 200" preserveAspectRatio="none" style="position:absolute;bottom:0;left:0;width:100%;height:30%">
-    <ellipse cx="400" cy="200" rx="450" ry="120" fill="#558b2f"/>
-    <circle cx="130" cy="168" r="9" fill="#ff7043"/><line x1="130" y1="177" x2="130" y2="198" stroke="#388e3c" stroke-width="3"/>
-    <circle cx="280" cy="162" r="8" fill="#ffee58"/><line x1="280" y1="170" x2="280" y2="198" stroke="#388e3c" stroke-width="3"/>
-    <circle cx="560" cy="165" r="9" fill="#ec407a"/><line x1="560" y1="174" x2="560" y2="198" stroke="#388e3c" stroke-width="3"/>
-    <circle cx="690" cy="160" r="8" fill="#ab47bc"/><line x1="690" y1="168" x2="690" y2="198" stroke="#388e3c" stroke-width="3"/>
-  </svg>
+<div class="bg active" id="bg0"><svg style="position:absolute;bottom:0;left:0;width:100%;height:30%" viewBox="0 0 800 200" preserveAspectRatio="none"><ellipse cx="400" cy="200" rx="450" ry="120" fill="#558b2f"/><circle cx="130" cy="168" r="9" fill="#ff7043"/><circle cx="280" cy="162" r="8" fill="#ffee58"/><circle cx="560" cy="165" r="9" fill="#ec407a"/><circle cx="690" cy="160" r="8" fill="#ab47bc"/></svg></div>
+<div class="bg" id="bg1"><div class="cloud" style="width:110px;height:30px;top:9%;animation-duration:24s"><div style="width:50px;height:50px;background:white;border-radius:50%;position:absolute;top:-25px;left:12px"></div></div><svg style="position:absolute;bottom:0;left:0;width:100%;height:30%" viewBox="0 0 800 200" preserveAspectRatio="none"><ellipse cx="400" cy="200" rx="450" ry="120" fill="#388e3c"/></svg></div>
+<div class="bg" id="bg2"><svg style="position:absolute;bottom:0;left:0;width:100%;height:30%" viewBox="0 0 800 200" preserveAspectRatio="none"><ellipse cx="400" cy="200" rx="450" ry="120" fill="#66bb6a"/></svg></div>
+<div class="bg" id="bg3"><svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none"><rect x="0" y="0" width="800" height="600" fill="#311b92"/><rect x="0" y="400" width="800" height="200" fill="#4a148c"/></svg></div>
+<div class="bg" id="bg4"><svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none"><rect x="0" y="0" width="800" height="600" fill="#1a0000"/><rect x="0" y="450" width="800" height="150" fill="#4a1500"/><ellipse cx="500" cy="380" rx="160" ry="110" fill="#ff6d00" opacity="0.35"/></svg></div>
+<div class="bg" id="bg5"><svg style="position:absolute;bottom:0;left:0;width:100%;height:30%" viewBox="0 0 800 200" preserveAspectRatio="none"><ellipse cx="400" cy="200" rx="450" ry="120" fill="#558b2f"/></svg></div>
+<div id="wind-lines"><div class="wind-line" style="top:30%;width:180px;animation-duration:0.9s;"></div><div class="wind-line" style="top:42%;width:240px;animation-duration:0.7s;animation-delay:0.1s"></div><div class="wind-line" style="top:54%;width:160px;animation-duration:1.1s;animation-delay:0.2s"></div></div>
+<div id="fire-anim">🔥</div>
+<svg id="hStraw" class="house" style="left:54%;width:155px;height:145px" viewBox="0 0 155 145"><polygon points="77,5 5,68 150,68" fill="#f9a825"/><line x1="30" y1="65" x2="77" y2="15" stroke="#f57c00" stroke-width="3"/><line x1="100" y1="67" x2="73" y2="13" stroke="#f57c00" stroke-width="3"/><rect x="18" y="66" width="119" height="78" fill="#ffe082" stroke="#f57c00" stroke-width="2"/><rect x="60" y="104" width="35" height="40" rx="17" fill="#795548"/><rect x="25" y="78" width="27" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/><rect x="103" y="78" width="27" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/></svg>
+<svg id="hWood" class="house" style="left:52%;width:162px;height:152px" viewBox="0 0 162 152"><polygon points="81,5 8,70 154,70" fill="#795548"/><line x1="38" y1="68" x2="81" y2="15" stroke="#5d4037" stroke-width="2.5"/><line x1="106" y1="70" x2="79" y2="12" stroke="#5d4037" stroke-width="2.5"/><rect x="16" y="68" width="130" height="82" fill="#a1887f" stroke="#795548" stroke-width="2"/><line x1="16" y1="90" x2="146" y2="90" stroke="#795548" stroke-width="1.5" opacity="0.5"/><rect x="61" y="108" width="38" height="42" rx="4" fill="#5d4037"/><rect x="24" y="78" width="29" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/><rect x="107" y="78" width="29" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/></svg>
+<svg id="hBrick" class="house" style="left:46%;width:182px;height:165px" viewBox="0 0 182 165"><rect x="130" y="18" width="17" height="38" fill="#c62828"/><polygon points="91,5 12,74 170,74" fill="#c62828"/><polygon points="91,10 18,72 164,72" fill="#e53935"/><rect x="13" y="72" width="156" height="91" fill="#ef9a9a"/><rect x="13" y="72" width="156" height="91" fill="none" stroke="#b71c1c" stroke-width="3"/><line x1="13" y1="84" x2="169" y2="84" stroke="#c62828" stroke-width="1.2"/><line x1="13" y1="96" x2="169" y2="96" stroke="#c62828" stroke-width="1.2"/><line x1="13" y1="108" x2="169" y2="108" stroke="#c62828" stroke-width="1.2"/><line x1="13" y1="120" x2="169" y2="120" stroke="#c62828" stroke-width="1.2"/><line x1="13" y1="132" x2="169" y2="132" stroke="#c62828" stroke-width="1.2"/><rect x="70" y="118" width="42" height="45" rx="4" fill="#5d4037"/><rect x="20" y="82" width="31" height="24" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/><rect x="130" y="82" width="31" height="24" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/></svg>
+<div id="title-card"><div class="book-cover"><div style="font-size:clamp(2.5rem,8vw,4rem);animation:titleBob 1s infinite alternate">🐷🐷🐷</div><h1>아기 돼지 삼형제</h1><div class="sub">🐺 늑대와의 대결!</div><div style="font-size:clamp(0.85rem,2vw,0.95rem);color:#aaa;margin-top:6px">딸이 직접 쓴 그림책</div><div class="tap">👆 탭하면 시작!</div></div></div>
+<div class="char-wrap anim-float" id="c1" style="left:-25%;opacity:0"><svg width="86" height="122" viewBox="0 0 86 122"><polygon points="17,30 9,6 27,25" fill="#f48fb1"/><polygon points="69,30 77,6 59,25" fill="#f48fb1"/><polygon points="18,28 13,13 25,24" fill="#fce4ec"/><polygon points="68,28 73,13 61,24" fill="#fce4ec"/><circle cx="43" cy="48" r="27" fill="#fce4ec" stroke="#f48fb1" stroke-width="2"/><ellipse cx="29" cy="55" rx="8" ry="5" fill="#f06292" opacity="0.4"/><ellipse cx="57" cy="55" rx="8" ry="5" fill="#f06292" opacity="0.4"/><circle cx="33" cy="44" r="5" fill="white"/><circle cx="34" cy="44" r="3" fill="#333"/><circle cx="53" cy="44" r="5" fill="white"/><circle cx="54" cy="44" r="3" fill="#333"/><ellipse cx="43" cy="53" rx="5" ry="3.5" fill="#f48fb1"/><path d="M36,59 Q43,66 50,59" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round"/><path d="M18,74 Q43,68 68,74 L73,107 Q43,113 13,107 Z" fill="#f48fb1"/><ellipse cx="9" cy="84" rx="9" ry="14" fill="#fce4ec" transform="rotate(-10,9,84)"/><ellipse cx="77" cy="84" rx="9" ry="14" fill="#fce4ec" transform="rotate(10,77,84)"/><rect x="27" y="107" width="12" height="19" rx="6" fill="#fce4ec"/><rect x="47" y="107" width="12" height="19" rx="6" fill="#fce4ec"/><ellipse cx="33" cy="127" rx="11" ry="5" fill="#f48fb1"/><ellipse cx="53" cy="127" rx="11" ry="5" fill="#f48fb1"/></svg></div>
+<div class="char-wrap anim-float" id="c2" style="left:-25%;opacity:0"><svg width="86" height="122" viewBox="0 0 86 122"><circle cx="15" cy="27" r="13" fill="#555"/><circle cx="71" cy="27" r="13" fill="#555"/><circle cx="15" cy="27" r="7" fill="#777"/><circle cx="71" cy="27" r="7" fill="#777"/><circle cx="43" cy="49" r="27" fill="white" stroke="#e0e0e0" stroke-width="1.5"/><ellipse cx="31" cy="44" rx="11" ry="10" fill="#555" transform="rotate(-8,31,44)"/><ellipse cx="55" cy="44" rx="11" ry="10" fill="#555" transform="rotate(8,55,44)"/><circle cx="31" cy="44" r="6" fill="white"/><circle cx="32" cy="44" r="4" fill="#111"/><circle cx="55" cy="44" r="6" fill="white"/><circle cx="56" cy="44" r="4" fill="#111"/><ellipse cx="43" cy="57" rx="6" ry="4" fill="#777"/><path d="M36,63 Q43,70 50,63" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/><path d="M18,77 Q43,71 68,77 L72,109 Q43,115 14,109 Z" fill="#f9a825"/><ellipse cx="8" cy="87" rx="9" ry="14" fill="#777" transform="rotate(-10,8,87)"/><ellipse cx="78" cy="87" rx="9" ry="14" fill="#777" transform="rotate(10,78,87)"/><rect x="27" y="109" width="12" height="19" rx="6" fill="#555"/><rect x="47" y="109" width="12" height="19" rx="6" fill="#555"/><ellipse cx="33" cy="129" rx="11" ry="5" fill="#333"/><ellipse cx="53" cy="129" rx="11" ry="5" fill="#333"/></svg></div>
+<div class="char-wrap anim-float" id="c3" style="left:-25%;opacity:0"><svg width="100" height="136" viewBox="0 0 100 136"><ellipse cx="50" cy="28" rx="33" ry="27" fill="#f48fb1"/><rect x="17" y="14" width="66" height="23" rx="11" fill="#f48fb1"/><ellipse cx="27" cy="41" rx="13" ry="17" fill="#90caf9" transform="rotate(-15,27,41)"/><ellipse cx="73" cy="41" rx="13" ry="17" fill="#90caf9" transform="rotate(15,73,41)"/><circle cx="50" cy="54" r="29" fill="#e3f2fd" stroke="#90caf9" stroke-width="2"/><ellipse cx="37" cy="49" rx="10" ry="10" fill="#1565c0"/><ellipse cx="63" cy="49" rx="10" ry="10" fill="#1565c0"/><circle cx="37" cy="49" r="6" fill="white"/><circle cx="38" cy="49" r="4" fill="#111"/><circle cx="63" cy="49" r="6" fill="white"/><circle cx="64" cy="49" r="4" fill="#111"/><ellipse cx="50" cy="61" rx="5" ry="4" fill="#90caf9"/><path d="M42,67 Q50,75 58,67" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/><path d="M23,85 Q50,79 77,85 L81,118 Q50,124 19,118 Z" fill="#1976d2"/><ellipse cx="12" cy="96" rx="9" ry="15" fill="#e3f2fd" transform="rotate(-12,12,96)"/><ellipse cx="88" cy="96" rx="9" ry="15" fill="#e3f2fd" transform="rotate(12,88,96)"/><line x1="88" y1="88" x2="114" y2="61" stroke="#ffd700" stroke-width="3.5"/><polygon points="114,61 107,67 114,53 121,67" fill="#ffd700"/><circle cx="114" cy="53" r="8" fill="#fff176" opacity="0.85"/><rect x="32" y="116" width="14" height="22" rx="7" fill="#e3f2fd"/><rect x="54" y="116" width="14" height="22" rx="7" fill="#e3f2fd"/><ellipse cx="39" cy="139" rx="12" ry="5" fill="#1565c0"/><ellipse cx="61" cy="139" rx="12" ry="5" fill="#1565c0"/></svg></div>
+<div class="char-wrap" id="cWolf" style="right:-30%;opacity:0"><svg width="112" height="155" viewBox="0 0 112 155"><polygon points="21,34 9,5 35,30" fill="#616161"/><polygon points="91,34 103,5 77,30" fill="#616161"/><polygon points="22,31 14,12 32,28" fill="#9e9e9e"/><polygon points="90,31 100,12 80,28" fill="#9e9e9e"/><ellipse cx="56" cy="59" rx="34" ry="31" fill="#9e9e9e" stroke="#757575" stroke-width="2"/><ellipse cx="56" cy="71" rx="17" ry="12" fill="#e0e0e0"/><ellipse cx="56" cy="66" rx="8" ry="5" fill="#424242"/><ellipse cx="39" cy="51" rx="8" ry="7" fill="#f44336"/><ellipse cx="73" cy="51" rx="8" ry="7" fill="#f44336"/><circle cx="39" cy="51" r="5" fill="#111"/><circle cx="73" cy="51" r="5" fill="#111"/><path d="M31,43 Q39,37 47,43" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/><path d="M65,43 Q73,37 81,43" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/><path d="M41,79 Q56,91 71,79" fill="none" stroke="#444" stroke-width="2.5" stroke-linecap="round"/><polygon points="47,79 43,89 51,79" fill="white"/><polygon points="56,82 52,93 60,82" fill="white"/><polygon points="65,79 61,89 69,79" fill="white"/><path d="M21,94 Q56,87 91,94 L97,138 Q56,146 15,138 Z" fill="#757575"/><ellipse cx="9" cy="107" rx="10" ry="17" fill="#9e9e9e" transform="rotate(-15,9,107)"/><ellipse cx="103" cy="107" rx="10" ry="17" fill="#9e9e9e" transform="rotate(15,103,107)"/><rect x="32" y="136" width="15" height="23" rx="7" fill="#757575"/><rect x="65" y="136" width="15" height="23" rx="7" fill="#757575"/><ellipse cx="39" cy="160" rx="13" ry="6" fill="#616161"/><ellipse cx="72" cy="160" rx="13" ry="6" fill="#616161"/></svg></div>
+<div id="scene-banner" style="display:none"></div>
+<div id="dialog" style="display:none"><div id="dialog-header"></div><div id="dialog-body"></div></div>
+<div id="voice-wave"><span></span><span></span><span></span><span></span><span></span></div>
+<div id="next-hint" style="display:none">탭해서 계속 ▶</div>
+<div id="controls"><button class="ctrl-btn" id="btnSound">🔊</button><button class="ctrl-btn" id="btnReplay">🔁</button><button class="ctrl-btn" id="btnAuto">⏸</button></div>
+<div id="progress"></div>
 </div>
-<div class="bg" id="bg1">
-  <div class="cloud" style="width:110px;height:30px;top:9%;animation-duration:24s;animation-delay:-6s">
-    <div style="width:50px;height:50px;background:white;border-radius:50%;position:absolute;top:-25px;left:12px"></div>
-    <div style="width:34px;height:34px;background:white;border-radius:50%;position:absolute;top:-16px;left:52px"></div>
-  </div>
-  <svg class="ground" viewBox="0 0 800 200" preserveAspectRatio="none" style="position:absolute;bottom:0;left:0;width:100%;height:30%">
-    <ellipse cx="400" cy="200" rx="450" ry="120" fill="#388e3c"/>
-  </svg>
-</div>
-<div class="bg" id="bg2">
-  <div class="cloud" style="width:90px;height:24px;top:12%;animation-duration:29s;animation-delay:-14s">
-    <div style="width:42px;height:42px;background:white;border-radius:50%;position:absolute;top:-21px;left:8px"></div>
-  </div>
-  <svg class="ground" viewBox="0 0 800 200" preserveAspectRatio="none" style="position:absolute;bottom:0;left:0;width:100%;height:30%">
-    <ellipse cx="400" cy="200" rx="450" ry="120" fill="#66bb6a"/>
-  </svg>
-</div>
-<div class="bg" id="bg3">
-  <!-- brick house backdrop: simple rects, no gradients -->
-  <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none">
-    <rect x="0" y="0" width="800" height="600" fill="#311b92"/>
-    <rect x="0" y="400" width="800" height="200" fill="#4a148c"/>
-    <rect x="270" y="145" width="270" height="210" rx="6" fill="#b71c1c" opacity="0.45"/>
-    <line x1="270" y1="170" x2="540" y2="170" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-    <line x1="270" y1="195" x2="540" y2="195" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-    <line x1="270" y1="220" x2="540" y2="220" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-    <line x1="270" y1="245" x2="540" y2="245" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-    <line x1="270" y1="270" x2="540" y2="270" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-    <line x1="270" y1="295" x2="540" y2="295" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-    <line x1="270" y1="320" x2="540" y2="320" stroke="#7f0000" stroke-width="2" opacity="0.4"/>
-  </svg>
-</div>
-<div class="bg" id="bg4">
-  <!-- fire scene: simple dark bg, no gradients in defs -->
-  <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 800 600" preserveAspectRatio="none">
-    <rect x="0" y="0" width="800" height="600" fill="#1a0000"/>
-    <rect x="0" y="450" width="800" height="150" fill="#4a1500"/>
-    <ellipse cx="500" cy="380" rx="160" ry="110" fill="#ff6d00" opacity="0.35"/>
-    <ellipse cx="500" cy="400" rx="120" ry="80" fill="#ff9100" opacity="0.3"/>
-  </svg>
-</div>
-<div class="bg" id="bg5">
-  <div class="cloud" style="width:100px;height:28px;top:7%;animation-duration:22s">
-    <div style="width:44px;height:44px;background:white;border-radius:50%;position:absolute;top:-22px;left:10px"></div>
-    <div style="width:30px;height:30px;background:white;border-radius:50%;position:absolute;top:-14px;left:46px"></div>
-  </div>
-  <svg style="position:absolute;top:5%;left:10%;width:80%;height:38%" viewBox="0 0 600 200" preserveAspectRatio="none">
-    <path d="M0,200 Q300,-50 600,200" fill="none" stroke="#f44336" stroke-width="8" opacity="0.25"/>
-    <path d="M20,200 Q300,-20 580,200" fill="none" stroke="#ff9800" stroke-width="8" opacity="0.25"/>
-    <path d="M40,200 Q300,5 560,200" fill="none" stroke="#ffeb3b" stroke-width="8" opacity="0.25"/>
-    <path d="M60,200 Q300,25 540,200" fill="none" stroke="#4caf50" stroke-width="8" opacity="0.25"/>
-    <path d="M80,200 Q300,45 520,200" fill="none" stroke="#2196f3" stroke-width="8" opacity="0.25"/>
-  </svg>
-  <svg class="ground" viewBox="0 0 800 200" preserveAspectRatio="none" style="position:absolute;bottom:0;left:0;width:100%;height:30%">
-    <ellipse cx="400" cy="200" rx="450" ry="120" fill="#558b2f"/>
-  </svg>
-</div>
-
-<!-- WIND -->
-
-<div id="wind">
-  <div class="wl" style="top:30%;width:180px;animation-duration:0.9s;animation-delay:0s"></div>
-  <div class="wl" style="top:38%;width:250px;animation-duration:0.7s;animation-delay:0.1s"></div>
-  <div class="wl" style="top:46%;width:160px;animation-duration:1.0s;animation-delay:0.2s"></div>
-  <div class="wl" style="top:54%;width:210px;animation-duration:0.8s;animation-delay:0.05s"></div>
-  <div class="wl" style="top:62%;width:140px;animation-duration:1.1s;animation-delay:0.15s"></div>
-</div>
-
-<!-- FIRE -->
-
-<div id="fire">🔥</div>
-
-<!-- HOUSES -->
-
-<!-- Straw -->
-
-<svg id="hStraw" class="house" style="left:54%;width:155px;height:145px" viewBox="0 0 155 145">
-  <polygon points="77,5 5,68 150,68" fill="#f9a825"/>
-  <line x1="30" y1="65" x2="77" y2="15" stroke="#f57c00" stroke-width="3"/>
-  <line x1="54" y1="67" x2="85" y2="11" stroke="#f57c00" stroke-width="3"/>
-  <line x1="100" y1="67" x2="73" y2="13" stroke="#f57c00" stroke-width="3"/>
-  <line x1="125" y1="63" x2="79" y2="14" stroke="#f57c00" stroke-width="3"/>
-  <rect x="18" y="66" width="119" height="78" fill="#ffe082" stroke="#f57c00" stroke-width="2"/>
-  <rect x="60" y="104" width="35" height="40" rx="17" fill="#795548"/>
-  <rect x="25" y="78" width="27" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
-  <rect x="103" y="78" width="27" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
-</svg>
-<!-- Wood -->
-<svg id="hWood" class="house" style="left:52%;width:162px;height:152px" viewBox="0 0 162 152">
-  <polygon points="81,5 8,70 154,70" fill="#795548"/>
-  <line x1="38" y1="68" x2="81" y2="15" stroke="#5d4037" stroke-width="2.5"/>
-  <line x1="62" y1="70" x2="86" y2="11" stroke="#5d4037" stroke-width="2.5"/>
-  <line x1="106" y1="70" x2="79" y2="12" stroke="#5d4037" stroke-width="2.5"/>
-  <line x1="130" y1="66" x2="82" y2="13" stroke="#5d4037" stroke-width="2.5"/>
-  <rect x="16" y="68" width="130" height="82" fill="#a1887f" stroke="#795548" stroke-width="2"/>
-  <line x1="16" y1="90" x2="146" y2="90" stroke="#795548" stroke-width="1.5" opacity="0.5"/>
-  <line x1="16" y1="112" x2="146" y2="112" stroke="#795548" stroke-width="1.5" opacity="0.5"/>
-  <line x1="16" y1="132" x2="146" y2="132" stroke="#795548" stroke-width="1.5" opacity="0.5"/>
-  <rect x="61" y="108" width="38" height="42" rx="4" fill="#5d4037"/>
-  <rect x="24" y="78" width="29" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
-  <rect x="107" y="78" width="29" height="21" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
-</svg>
-<!-- Brick -->
-<svg id="hBrick" class="house" style="left:46%;width:182px;height:165px" viewBox="0 0 182 165">
-  <rect x="130" y="18" width="17" height="38" fill="#c62828"/>
-  <polygon points="91,5 12,74 170,74" fill="#c62828"/>
-  <polygon points="91,10 18,72 164,72" fill="#e53935"/>
-  <rect x="13" y="72" width="156" height="91" fill="#ef9a9a"/>
-  <rect x="13" y="72" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="84" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="96" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="108" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="120" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="132" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="144" width="156" height="12" fill="none" stroke="#c62828" stroke-width="1.2"/>
-  <rect x="13" y="72" width="156" height="91" fill="none" stroke="#b71c1c" stroke-width="3"/>
-  <rect x="70" y="118" width="42" height="45" rx="4" fill="#5d4037"/>
-  <rect x="20" y="82" width="31" height="24" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/>
-  <rect x="130" y="82" width="31" height="24" rx="3" fill="#b3e5fc" stroke="#0288d1" stroke-width="2"/>
-</svg>
-
-<!-- TITLE -->
-
-<div id="title" style="cursor:pointer;">
-  <div class="cover">
-    <div style="font-size:clamp(2.5rem,8vw,4rem);animation:hBob 0.8s infinite alternate">🐷🐷🐷</div>
-    <h1>아기 돼지 삼형제</h1>
-    <div class="sub">🐺 늑대와의 대결!</div>
-    <div style="font-size:clamp(0.85rem,2vw,0.95rem);color:#aaa;margin-top:4px">딸이 직접 쓴 그림책</div>
-    <div class="tap">👆 탭하면 시작!</div>
-  </div>
-</div>
-
-<!-- CHARACTERS -->
-
-<!-- 첫째 (분홍 고양이) -->
-
-<div class="ch af" id="c1" style="left:-25%;opacity:0">
-<svg width="86" height="122" viewBox="0 0 86 122">
-  <polygon points="17,30 9,6 27,25" fill="#f48fb1"/>
-  <polygon points="69,30 77,6 59,25" fill="#f48fb1"/>
-  <polygon points="18,28 13,13 25,24" fill="#fce4ec"/>
-  <polygon points="68,28 73,13 61,24" fill="#fce4ec"/>
-  <circle cx="43" cy="48" r="27" fill="#fce4ec" stroke="#f48fb1" stroke-width="2"/>
-  <ellipse cx="29" cy="55" rx="8" ry="5" fill="#f06292" opacity="0.4"/>
-  <ellipse cx="57" cy="55" rx="8" ry="5" fill="#f06292" opacity="0.4"/>
-  <circle cx="33" cy="44" r="5" fill="white"/><circle cx="34" cy="44" r="3" fill="#333"/>
-  <circle cx="53" cy="44" r="5" fill="white"/><circle cx="54" cy="44" r="3" fill="#333"/>
-  <ellipse cx="43" cy="53" rx="5" ry="3.5" fill="#f48fb1"/>
-  <path d="M36,59 Q43,66 50,59" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M18,74 Q43,68 68,74 L73,107 Q43,113 13,107 Z" fill="#f48fb1"/>
-  <ellipse cx="9" cy="84" rx="9" ry="14" fill="#fce4ec" transform="rotate(-10,9,84)"/>
-  <ellipse cx="77" cy="84" rx="9" ry="14" fill="#fce4ec" transform="rotate(10,77,84)"/>
-  <rect x="27" y="107" width="12" height="19" rx="6" fill="#fce4ec"/>
-  <rect x="47" y="107" width="12" height="19" rx="6" fill="#fce4ec"/>
-  <ellipse cx="33" cy="127" rx="11" ry="5" fill="#f48fb1"/>
-  <ellipse cx="53" cy="127" rx="11" ry="5" fill="#f48fb1"/>
-</svg>
-</div>
-
-<!-- 둘째 (판다, 노란옷) -->
-
-<div class="ch af" id="c2" style="left:-25%;opacity:0">
-<svg width="86" height="122" viewBox="0 0 86 122">
-  <circle cx="15" cy="27" r="13" fill="#555"/>
-  <circle cx="71" cy="27" r="13" fill="#555"/>
-  <circle cx="15" cy="27" r="7" fill="#777"/>
-  <circle cx="71" cy="27" r="7" fill="#777"/>
-  <circle cx="43" cy="49" r="27" fill="white" stroke="#e0e0e0" stroke-width="1.5"/>
-  <ellipse cx="31" cy="44" rx="11" ry="10" fill="#555" transform="rotate(-8,31,44)"/>
-  <ellipse cx="55" cy="44" rx="11" ry="10" fill="#555" transform="rotate(8,55,44)"/>
-  <circle cx="31" cy="44" r="6" fill="white"/><circle cx="32" cy="44" r="4" fill="#111"/>
-  <circle cx="55" cy="44" r="6" fill="white"/><circle cx="56" cy="44" r="4" fill="#111"/>
-  <circle cx="33" cy="42" r="1.5" fill="white"/><circle cx="57" cy="42" r="1.5" fill="white"/>
-  <ellipse cx="43" cy="57" rx="6" ry="4" fill="#777"/>
-  <path d="M36,63 Q43,70 50,63" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/>
-  <path d="M18,77 Q43,71 68,77 L72,109 Q43,115 14,109 Z" fill="#f9a825"/>
-  <ellipse cx="8" cy="87" rx="9" ry="14" fill="#777" transform="rotate(-10,8,87)"/>
-  <ellipse cx="78" cy="87" rx="9" ry="14" fill="#777" transform="rotate(10,78,87)"/>
-  <rect x="27" y="109" width="12" height="19" rx="6" fill="#555"/>
-  <rect x="47" y="109" width="12" height="19" rx="6" fill="#555"/>
-  <ellipse cx="33" cy="129" rx="11" ry="5" fill="#333"/>
-  <ellipse cx="53" cy="129" rx="11" ry="5" fill="#333"/>
-</svg>
-</div>
-
-<!-- 셋째 (파란 강아지, 마법봉) -->
-
-<div class="ch af" id="c3" style="left:-25%;opacity:0">
-<svg width="100" height="136" viewBox="0 0 100 136">
-  <ellipse cx="50" cy="28" rx="33" ry="27" fill="#f48fb1"/>
-  <rect x="17" y="14" width="66" height="23" rx="11" fill="#f48fb1"/>
-  <ellipse cx="27" cy="41" rx="13" ry="17" fill="#90caf9" transform="rotate(-15,27,41)"/>
-  <ellipse cx="73" cy="41" rx="13" ry="17" fill="#90caf9" transform="rotate(15,73,41)"/>
-  <circle cx="50" cy="54" r="29" fill="#e3f2fd" stroke="#90caf9" stroke-width="2"/>
-  <ellipse cx="37" cy="49" rx="10" ry="10" fill="#1565c0"/>
-  <ellipse cx="63" cy="49" rx="10" ry="10" fill="#1565c0"/>
-  <circle cx="37" cy="49" r="6" fill="white"/><circle cx="38" cy="49" r="4" fill="#111"/>
-  <circle cx="63" cy="49" r="6" fill="white"/><circle cx="64" cy="49" r="4" fill="#111"/>
-  <circle cx="39" cy="47" r="1.5" fill="white"/><circle cx="65" cy="47" r="1.5" fill="white"/>
-  <path d="M19,44 Q9,37 13,54 Q17,61 23,57" fill="#1565c0"/>
-  <path d="M81,44 Q91,37 87,54 Q83,61 77,57" fill="#1565c0"/>
-  <ellipse cx="50" cy="61" rx="5" ry="4" fill="#90caf9"/>
-  <path d="M42,67 Q50,75 58,67" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/>
-  <path d="M23,85 Q50,79 77,85 L81,118 Q50,124 19,118 Z" fill="#1976d2"/>
-  <ellipse cx="12" cy="96" rx="9" ry="15" fill="#e3f2fd" transform="rotate(-12,12,96)"/>
-  <ellipse cx="88" cy="96" rx="9" ry="15" fill="#e3f2fd" transform="rotate(12,88,96)"/>
-  <!-- MAGIC WAND -->
-  <line x1="88" y1="88" x2="114" y2="61" stroke="#ffd700" stroke-width="3.5"/>
-  <polygon points="114,61 107,67 114,53 121,67" fill="#ffd700"/>
-  <circle cx="114" cy="53" r="8" fill="#fff176" opacity="0.85"/>
-  <circle cx="114" cy="53" r="5" fill="#ffd700"/>
-  <rect x="32" y="116" width="14" height="22" rx="7" fill="#e3f2fd"/>
-  <rect x="54" y="116" width="14" height="22" rx="7" fill="#e3f2fd"/>
-  <ellipse cx="39" cy="139" rx="12" ry="5" fill="#1565c0"/>
-  <ellipse cx="61" cy="139" rx="12" ry="5" fill="#1565c0"/>
-</svg>
-</div>
-
-<!-- 늑대 -->
-
-<div class="ch" id="cW" style="right:-30%;opacity:0">
-<svg width="112" height="155" viewBox="0 0 112 155">
-  <polygon points="21,34 9,5 35,30" fill="#616161"/>
-  <polygon points="91,34 103,5 77,30" fill="#616161"/>
-  <polygon points="22,31 14,12 32,28" fill="#9e9e9e"/>
-  <polygon points="90,31 100,12 80,28" fill="#9e9e9e"/>
-  <ellipse cx="56" cy="59" rx="34" ry="31" fill="#9e9e9e" stroke="#757575" stroke-width="2"/>
-  <ellipse cx="56" cy="71" rx="17" ry="12" fill="#e0e0e0"/>
-  <ellipse cx="56" cy="66" rx="8" ry="5" fill="#424242"/>
-  <ellipse cx="39" cy="51" rx="8" ry="7" fill="#f44336"/>
-  <ellipse cx="73" cy="51" rx="8" ry="7" fill="#f44336"/>
-  <circle cx="39" cy="51" r="5" fill="#111"/><circle cx="73" cy="51" r="5" fill="#111"/>
-  <circle cx="40" cy="49" r="1.5" fill="white"/><circle cx="74" cy="49" r="1.5" fill="white"/>
-  <path d="M31,43 Q39,37 47,43" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
-  <path d="M65,43 Q73,37 81,43" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
-  <path d="M41,79 Q56,91 71,79" fill="none" stroke="#444" stroke-width="2.5" stroke-linecap="round"/>
-  <polygon points="47,79 43,89 51,79" fill="white" stroke="#aaa" stroke-width="1"/>
-  <polygon points="56,82 52,93 60,82" fill="white" stroke="#aaa" stroke-width="1"/>
-  <polygon points="65,79 61,89 69,79" fill="white" stroke="#aaa" stroke-width="1"/>
-  <path d="M21,94 Q56,87 91,94 L97,138 Q56,146 15,138 Z" fill="#757575"/>
-  <ellipse cx="9" cy="107" rx="10" ry="17" fill="#9e9e9e" transform="rotate(-15,9,107)"/>
-  <ellipse cx="103" cy="107" rx="10" ry="17" fill="#9e9e9e" transform="rotate(15,103,107)"/>
-  <path d="M89,124 Q113,109 110,138 Q106,156 95,148" fill="none" stroke="#9e9e9e" stroke-width="7" stroke-linecap="round"/>
-  <rect x="32" y="136" width="15" height="23" rx="7" fill="#757575"/>
-  <rect x="65" y="136" width="15" height="23" rx="7" fill="#757575"/>
-  <ellipse cx="39" cy="160" rx="13" ry="6" fill="#616161"/>
-  <ellipse cx="72" cy="160" rx="13" ry="6" fill="#616161"/>
-</svg>
-</div>
-
-<!-- UI -->
-
-<div id="banner"></div>
-<div id="dialog" style="display:none">
-  <div id="dhead"></div>
-  <div id="dbody"></div>
-</div>
-<div id="vw"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-<div id="hint">탭해서 계속 ▶</div>
-<div id="ctrls">
-  <button class="cb" id="bSnd">🔊</button>
-  <button class="cb" id="bBgm">🎵</button>
-  <button class="cb" id="bRep">🔁</button>
-  <button class="cb" id="bAuto">⏸</button>
-</div>
-<div id="prog"></div>
-
-</div><!-- /stage -->
 <script>
-// ══════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════
-var sndEnabled = true;
-var bgmEnabled = true;
-var step       = -1;
-var autoOn     = false;
-var autoTimer  = null;
-var typeTimer  = null;
-var koVoice    = null;
-
-// ══════════════════════════════════════════════════════
-// AUDIO  — Web Audio API, created lazily inside user gesture
-// ══════════════════════════════════════════════════════
-var ctx = null;          // AudioContext — null until first tap
-var bgmIntervalId = null;
-var bgmGainNode   = null;
-var bgmNoteIdx    = 0;
-var bgmNotes      = [];
-var bgmTempo      = 0.22;
-var bgmRunning    = false;
-
-// Called inside every user-gesture handler → safe on iOS
-function ensureCtx() {
-if (ctx) {
-if (ctx.state === ‘suspended’) { try { ctx.resume(); } catch(e){} }
-return true;
-}
-try {
-var C = window.AudioContext || window.webkitAudioContext;
-if (!C) return false;
-ctx = new C();
-return true;
-} catch(e) { ctx = null; return false; }
-}
-
-function stopBGM() {
-bgmRunning = false;
-if (bgmGainNode) {
-try { bgmGainNode.gain.setValueAtTime(0, ctx.currentTime); } catch(e){}
-bgmGainNode = null;
-}
-}
-
-function scheduleBGMNote() {
-if (!bgmRunning || !ctx || !bgmGainNode || bgmNotes.length === 0) return;
-try {
-var osc = ctx.createOscillator();
-var g   = ctx.createGain();
-osc.connect(g);
-g.connect(bgmGainNode);
-osc.frequency.value = bgmNotes[bgmNoteIdx % bgmNotes.length];
-osc.type = (bgmTempo < 0.2) ? ‘sawtooth’ : ‘triangle’;
-var t = ctx.currentTime;
-g.gain.setValueAtTime(0.35, t);
-g.gain.exponentialRampToValueAtTime(0.01, t + bgmTempo * 0.85);
-osc.start(t);
-osc.stop(t + bgmTempo);
-bgmNoteIdx++;
-osc.onended = function() { if (bgmRunning) scheduleBGMNote(); };
-} catch(e) { bgmRunning = false; }
-}
-
-function playBGM(mood) {
-if (!bgmEnabled) return;
-if (!ensureCtx()) return;
-stopBGM();
-var melodies = {
-happy:   [261,329,392,523,392,329,261,220,293,349,440,523],
-tense:   [220,233,247,220,207,196,207,220,233,207,196,207],
-victory: [523,659,784,1047,784,659,784,1047,659,523,659,784]
-};
-bgmNotes   = melodies[mood] || melodies.happy;
-bgmTempo   = (mood === ‘tense’) ? 0.18 : 0.22;
-bgmNoteIdx = 0;
-bgmRunning = true;
-try {
-bgmGainNode = ctx.createGain();
-bgmGainNode.gain.setValueAtTime(0, ctx.currentTime);
-bgmGainNode.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 1.5);
-bgmGainNode.connect(ctx.destination);
-scheduleBGMNote();
-} catch(e) { bgmRunning = false; }
-}
-
-function playSFX(type) {
-if (!bgmEnabled) return;
-if (!ensureCtx()) return;
-try {
-var t = ctx.currentTime;
-if (type === ‘wind’) {
-var dur = 0.9;
-var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
-var data = buf.getChannelData(0);
-for (var i = 0; i < data.length; i++) {
-var env = Math.sin(Math.PI * i / data.length);
-data[i] = (Math.random() * 2 - 1) * env * 0.6;
-}
-var src = ctx.createBufferSource();
-src.buffer = buf;
-var filt = ctx.createBiquadFilter();
-filt.type = ‘bandpass’;
-filt.frequency.value = 700;
-var g = ctx.createGain();
-g.gain.setValueAtTime(0.7, t);
-g.gain.exponentialRampToValueAtTime(0.01, t + dur);
-src.connect(filt); filt.connect(g); g.connect(ctx.destination);
-src.start(t); src.stop(t + dur);
-
-```
-    } else if (type === 'knock') {
-        [0, 0.27, 0.54].forEach(function(d) {
-            var o = ctx.createOscillator();
-            var g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.frequency.value = 190; o.type = 'sine';
-            g.gain.setValueAtTime(0.6, t + d);
-            g.gain.exponentialRampToValueAtTime(0.01, t + d + 0.14);
-            o.start(t + d); o.stop(t + d + 0.18);
-        });
-
-    } else if (type === 'magic') {
-        for (var mi = 0; mi < 5; mi++) {
-            (function(idx) {
-                var o = ctx.createOscillator();
-                var g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.type = 'sine';
-                var td = t + idx * 0.1;
-                o.frequency.setValueAtTime(400 + idx * 200, td);
-                o.frequency.exponentialRampToValueAtTime(1800 + idx * 100, td + 0.4);
-                g.gain.setValueAtTime(0.25, td);
-                g.gain.exponentialRampToValueAtTime(0.01, td + 0.5);
-                o.start(td); o.stop(td + 0.55);
-            })(mi);
-        }
-
-    } else if (type === 'fire') {
-        var fdur = 0.9;
-        var fbuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * fdur), ctx.sampleRate);
-        var fdata = fbuf.getChannelData(0);
-        for (var fi = 0; fi < fdata.length; fi++) {
-            var ft = fi / ctx.sampleRate;
-            var fe = Math.min(1, ft * 10) * Math.max(0, 1 - (ft - 0.55) / 0.35);
-            fdata[fi] = (Math.random() * 2 - 1) * fe * 0.55;
-        }
-        var fsrc = ctx.createBufferSource(); fsrc.buffer = fbuf;
-        var ffilt = ctx.createBiquadFilter(); ffilt.type = 'bandpass'; ffilt.frequency.value = 280;
-        var fg = ctx.createGain();
-        fg.gain.setValueAtTime(0.5, t); fg.gain.exponentialRampToValueAtTime(0.01, t + fdur);
-        fsrc.connect(ffilt); ffilt.connect(fg); fg.connect(ctx.destination);
-        fsrc.start(t); fsrc.stop(t + fdur);
-
-    } else if (type === 'cheer') {
-        [523, 659, 784, 1047].forEach(function(freq, i) {
-            var o = ctx.createOscillator();
-            var g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.type = 'triangle';
-            var td = t + i * 0.07;
-            o.frequency.setValueAtTime(freq, td);
-            o.frequency.exponentialRampToValueAtTime(freq * 2, td + 0.5);
-            g.gain.setValueAtTime(0.3, td);
-            g.gain.exponentialRampToValueAtTime(0.01, td + 0.6);
-            o.start(td); o.stop(td + 0.65);
-        });
-    }
-} catch(e) {}
-```
-
-}
-
-// ══════════════════════════════════════════════════════
-// TTS
-// ══════════════════════════════════════════════════════
-function loadVoices() {
-var vs = speechSynthesis.getVoices();
-koVoice = vs.find(function(v) { return v.lang === ‘ko-KR’; })
-|| vs.find(function(v) { return v.lang.startsWith(‘ko’); })
-|| vs[0] || null;
-}
-loadVoices();
-if (typeof speechSynthesis.onvoiceschanged !== ‘undefined’)
-speechSynthesis.onvoiceschanged = loadVoices;
-
-function speak(text, vp, onDone) {
-if (!sndEnabled) { if (onDone) onDone(); return; }
-try { speechSynthesis.cancel(); } catch(e) {}
-// strip emoji for cleaner TTS
-var clean = text.replace(/[\u{1F000}-\u{1FFFF}]/gu, ‘’)
-.replace(/[\u2600-\u27BF]/g, ‘’)
-.replace(/\n/g, ’ ’).trim();
-try {
-var utt = new SpeechSynthesisUtterance(clean);
-utt.lang   = ‘ko-KR’;
-if (koVoice) utt.voice = koVoice;
-utt.pitch  = vp.pitch;
-utt.rate   = vp.rate;
-utt.volume = 1;
-var vwEl = document.getElementById(‘vw’);
-utt.onstart = function() { vwEl.classList.add(‘on’); };
-utt.onend   = function() { vwEl.classList.remove(‘on’); if (onDone) onDone(); };
-utt.onerror = function() { vwEl.classList.remove(‘on’); if (onDone) onDone(); };
-speechSynthesis.speak(utt);
-} catch(e) { if (onDone) onDone(); }
-}
-
-function stopSpeak() {
-try { speechSynthesis.cancel(); } catch(e) {}
-document.getElementById(‘vw’).classList.remove(‘on’);
-}
-
-// ══════════════════════════════════════════════════════
-// SCENES
-// ══════════════════════════════════════════════════════
-var SCENES = [
-{ bg:0, banner:‘🐷 옛날 옛날에…’, bgm:‘happy’, sfx:null,
-chars:{c1:{x:‘10%’,op:1},c2:{x:‘33%’,op:1},c3:{x:‘56%’,op:1},cW:{x:‘110%’,op:0}},
-anims:{c1:‘af’,c2:‘af’,c3:‘af’},
-houses:{hStraw:false,hWood:false,hBrick:false}, wind:false, fire:false,
-spk:‘내레이터’, sc:’#4e342e’, se:‘📖’,
-text:‘옛날 옛날에, 아기 돼지 삼형제가 살고 있었어요.’,
-voice:{pitch:1.0,rate:0.88}
-},
-{ bg:0, banner:‘🐷 옛날 옛날에…’, bgm:null, sfx:‘cheer’,
-chars:{c1:{x:‘10%’,op:1},c2:{x:‘33%’,op:1},c3:{x:‘56%’,op:1},cW:{x:‘110%’,op:0}},
-anims:{c1:‘af’,c2:‘af’,c3:‘af’}, houses:{}, wind:false, fire:false,
-spk:‘삼형제 🐷🐷🐷’, sc:’#f57c00’, se:‘🐷’,
-text:’“꿀꿀, 맛있다!” “나도! 시원해.” “나도 냠냠냠.”\n”우리도 맛있게 생겼어 하하하하.”’,
-voice:{pitch:1.25,rate:1.0}
-},
-{ bg:0, banner:‘🐺 2장: 늑대가 나타났어요!’, bgm:‘tense’, sfx:null,
-chars:{c1:{x:‘10%’,op:1},c2:{x:‘33%’,op:1},c3:{x:‘56%’,op:1},cW:{x:‘68%’,op:1}},
-anims:{c1:‘af’,c2:‘af’,c3:‘af’,cW:‘as_an’},
-houses:{}, wind:false, fire:false,
-spk:‘늑대 🐺’, sc:’#424242’, se:‘🐺’,
-text:’“으흐흐, 이 녀석들 포동포동하게 살이 올랐구나. 아우~ 다 잡아먹어 버리겠다!”’,
-voice:{pitch:0.65,rate:1.1}
-},
-{ bg:0, banner:‘🐺 2장: 늑대가 나타났어요!’, bgm:null, sfx:null,
-chars:{c1:{x:‘10%’,op:1},c2:{x:‘33%’,op:1},c3:{x:‘56%’,op:1},cW:{x:‘68%’,op:1}},
-anims:{c1:‘as_sc’,c2:‘as_sc’,c3:‘as_sc’,cW:‘as_an’},
-houses:{}, wind:false, fire:false,
-spk:‘삼형제 🐷’, sc:’#e65100’, se:‘😱’,
-text:’“으악, 늑대다! 돼지 살려! 집을 만들어 볼까?” “그거 좋은 생각이야!”’,
-voice:{pitch:1.4,rate:1.15}
-},
-{ bg:1, banner:‘🌾 3장: 첫째의 지푸라기 집’, bgm:‘happy’, sfx:null,
-chars:{c1:{x:‘24%’,op:1},c2:{x:’-25%’,op:0},c3:{x:’-25%’,op:0},cW:{x:‘110%’,op:0}},
-anims:{c1:‘af’},
-houses:{hStraw:true,hWood:false,hBrick:false}, wind:false, fire:false,
-spk:‘내레이터’, sc:’#4e342e’, se:‘📖’,
-text:‘첫째 돼지가 지푸라기로 집을 지었어요. 금방 다 지었죠!’,
-voice:{pitch:1.0,rate:0.9}
-},
-{ bg:1, banner:‘🌾 3장: 첫째의 지푸라기 집’, bgm:null, sfx:‘knock’,
-chars:{c1:{x:‘24%’,op:1},c2:{x:’-25%’,op:0},c3:{x:’-25%’,op:0},cW:{x:‘68%’,op:1}},
-anims:{c1:‘as_sc’,cW:‘as_an’},
-houses:{hStraw:true}, wind:false, fire:false,
-spk:‘늑대 🐺’, sc:’#424242’, se:‘🐺’,
-text:’“으흐흐 맛있겠다. 돼지야 돼지야, 문 열어봐.”\n”안되요 안돼! 코끼리 아저씨가 안된대요.”\n”그럼, 우— 훅—!”’,
-voice:{pitch:0.65,rate:1.05}
-},
-{ bg:1, banner:‘🌾 지푸라기 집이 날아갔어요!’, bgm:null, sfx:‘wind’,
-chars:{c1:{x:‘24%’,op:1},c2:{x:’-25%’,op:0},c3:{x:’-25%’,op:0},cW:{x:‘68%’,op:1}},
-anims:{c1:‘ar’,cW:‘as_an’},
-houses:{hStraw:true}, wind:true, fire:false,
-spk:‘첫째 🐷’, sc:’#c2185b’, se:‘😱’,
-text:’“으악! 내 집! 도망가자!”\n첫째 돼지 판다가 둘째네 집으로 도망갔어요.’,
-voice:{pitch:1.4,rate:1.2}
-},
-{ bg:2, banner:‘🌲 4장: 둘째의 나무 집’, bgm:‘happy’, sfx:null,
-chars:{c1:{x:‘9%’,op:1},c2:{x:‘27%’,op:1},c3:{x:’-25%’,op:0},cW:{x:‘110%’,op:0}},
-anims:{c1:‘af’,c2:‘af’},
-houses:{hStraw:false,hWood:true,hBrick:false}, wind:false, fire:false,
-spk:‘내레이터’, sc:’#4e342e’, se:‘📖’,
-text:‘둘째 고양이는 나무로 집을 지었어요.\n”야 둘째야! 늑대가 와서 내 집을 다 날려버렸어!”\n”늑대? 무서워 하지마. 내 집은 나무로 만들었는걸!”’,
-voice:{pitch:1.0,rate:0.9}
-},
-{ bg:2, banner:‘🌲 4장: 늑대가 또 왔어요!’, bgm:‘tense’, sfx:‘knock’,
-chars:{c1:{x:‘9%’,op:1},c2:{x:‘27%’,op:1},c3:{x:’-25%’,op:0},cW:{x:‘68%’,op:1}},
-anims:{c1:‘as_sc’,c2:‘as_sc’,cW:‘as_an’},
-houses:{hWood:true}, wind:false, fire:false,
-spk:‘늑대 🐺’, sc:’#424242’, se:‘🐺’,
-text:’“돼지야, 돼지야, 문 열어봐.”\n”안돼 안돼. 문 열면 안 돼.”\n”그렇다면, 좋았어. 훅 훅 훅, 우—!”’,
-voice:{pitch:0.65,rate:1.08}
-},
-{ bg:2, banner:‘🌲 나무 집도 날아갔어요!’, bgm:null, sfx:‘wind’,
-chars:{c1:{x:‘9%’,op:1},c2:{x:‘27%’,op:1},c3:{x:’-25%’,op:0},cW:{x:‘68%’,op:1}},
-anims:{c1:‘ar’,c2:‘ar’,cW:‘as_an’},
-houses:{hWood:true}, wind:true, fire:false,
-spk:‘내레이터’, sc:’#4e342e’, se:‘📖’,
-text:’“으악, 내 집! 도망가자!”\n첫째와 둘째가 셋째네 집으로 도망을 갔습니다.’,
-voice:{pitch:1.0,rate:0.9}
-},
-{ bg:3, banner:‘🧱 5장: 셋째의 튼튼한 벽돌 집!’, bgm:‘tense’, sfx:null,
-chars:{c1:{x:‘5%’,op:1},c2:{x:‘20%’,op:1},c3:{x:‘36%’,op:1},cW:{x:‘74%’,op:1}},
-anims:{c1:‘af’,c2:‘af’,c3:‘af’,cW:‘as_an’},
-houses:{hStraw:false,hWood:false,hBrick:true}, wind:false, fire:false,
-spk:‘셋째 🐷’, sc:’#1976d2’, se:‘🧱’,
-text:’“으야야~ 셋째야, 늑대가 왔어!”\n”늑대? 내 집은 벽돌이라 걱정 없어!”\n”돼지야, 돼지야, 문 열어봐.” “안 돼!”’,
-voice:{pitch:1.3,rate:0.98}
-},
-{ bg:3, banner:‘🧱 5장: 늑대가 불어도 끄떡없어!’, bgm:null, sfx:null,
-chars:{c1:{x:‘5%’,op:1},c2:{x:‘20%’,op:1},c3:{x:‘36%’,op:1},cW:{x:‘74%’,op:1}},
-anims:{c1:‘as_sc’,c2:‘as_sc’,c3:‘am’,cW:‘as_an’},
-houses:{hBrick:true}, wind:true, fire:false,
-spk:‘늑대 🐺’, sc:’#424242’, se:‘🐺’,
-text:’“훠우우~ 훠우우~! 꿈쩍도 안 하잖아?”\n”역시 벽돌이 최고야! 그럼 굴뚝으로 들어가 볼까?”\n늑대는 굴뚝으로 들어갔어요.’,
-voice:{pitch:0.65,rate:1.05}
-},
-{ bg:4, banner:‘🔥 6장: 셋째의 마법봉 작전!’, bgm:‘tense’, sfx:‘magic’,
-chars:{c1:{x:‘3%’,op:1},c2:{x:‘17%’,op:1},c3:{x:‘33%’,op:1},cW:{x:‘72%’,op:1}},
-anims:{c1:‘as_sc’,c2:‘as_sc’,c3:‘am’,cW:‘ar’},
-houses:{hBrick:true}, wind:false, fire:false,
-spk:‘셋째 🐷’, sc:’#bf360c’, se:‘✨’,
-text:’“으아~ 무서워!” “아, 맞다. 방법이 있어!”\n수리수리 마수리, 불을 켜라!’,
-voice:{pitch:1.3,rate:1.0}
-},
-{ bg:4, banner:‘🔥 6장: 뜨겁다 뜨거워!’, bgm:null, sfx:‘fire’,
-chars:{c1:{x:‘3%’,op:1},c2:{x:‘17%’,op:1},c3:{x:‘33%’,op:1},cW:{x:‘68%’,op:1}},
-anims:{c1:‘ac’,c2:‘af’,c3:‘am’,cW:‘as_sc’},
-houses:{hBrick:true}, wind:false, fire:true,
-spk:‘늑대 🐺’, sc:’#424242’, se:‘🐺’,
-text:’“으아~ 뜨거워!!”’,
-voice:{pitch:0.65,rate:1.3}
-},
-{ bg:4, banner:‘🏃 7장: 늑대가 도망가요!’, bgm:null, sfx:‘cheer’,
-chars:{c1:{x:‘3%’,op:1},c2:{x:‘17%’,op:1},c3:{x:‘33%’,op:1},cW:{x:‘82%’,op:1}},
-anims:{c1:‘aj’,c2:‘aj’,c3:‘ac’,cW:‘ar’},
-houses:{}, wind:false, fire:true,
-spk:‘늑대 🐺’, sc:’#424242’, se:‘🐺’,
-text:’“으아~ 늑대 살려~!!” “으아~ 으아~ 으아~ 으아 ㅠ!!”\n늑대는 마을을 도망갔어요.’,
-voice:{pitch:0.65,rate:1.35}
-},
-{ bg:5, banner:‘🎉 8장: 만세! 늑대를 물리쳤어요!’, bgm:‘victory’, sfx:‘cheer’,
-chars:{c1:{x:‘8%’,op:1},c2:{x:‘28%’,op:1},c3:{x:‘48%’,op:1},cW:{x:‘110%’,op:0}},
-anims:{c1:‘ac’,c2:‘ac’,c3:‘ac’},
-houses:{hStraw:false,hWood:false,hBrick:false}, wind:false, fire:false,
-spk:‘삼형제 🐷🐷🐷’, sc:’#e65100’, se:‘🎊’,
-text:’“만세~~!! 늑대를 물리쳤어!”\n우리가 해냈어! 삼형제는 행복하게 살았답니다!’,
-voice:{pitch:1.3,rate:0.95}
-}
+const scenes=[
+  {bg:0,banner:'🐷 옛날 옛날에…',chars:{c1:{x:'10%',op:1},c2:{x:'33%',op:1},c3:{x:'56%',op:1},cWolf:{x:'110%',op:0}},anim:{c1:'float',c2:'float',c3:'float'},houses:{},wind:false,fire:false,speaker:'내레이터',speakerColor:'#4e342e',text:'옛날 옛날에, 아기 돼지 삼형제가 살고 있었어요.',voice:{pitch:1.0,rate:0.88,volume:1}},
+  {bg:0,banner:'🐷 옛날 옛날에…',chars:{c1:{x:'10%',op:1},c2:{x:'33%',op:1},c3:{x:'56%',op:1},cWolf:{x:'110%',op:0}},anim:{c1:'float',c2:'float',c3:'float'},houses:{},wind:false,fire:false,speaker:'삼형제 🐷🐷🐷',speakerColor:'#f57c00',text:'"꿀꿀, 맛있다!" "나도! 시원해." "나도 냠냠냠."\n"우리도 맛있게 생겼어 하하하하."',voice:{pitch:1.25,rate:1.0,volume:1}},
+  {bg:0,banner:'🐺 2장: 늑대가 나타났어요!',chars:{c1:{x:'10%',op:1},c2:{x:'33%',op:1},c3:{x:'56%',op:1},cWolf:{x:'68%',op:1}},anim:{c1:'float',c2:'float',c3:'float',cWolf:'angry'},houses:{},wind:false,fire:false,speaker:'늑대 🐺',speakerColor:'#424242',text:'"으흐흐, 이 녀석들 포동포동하게 살이 올랐구나.\n아우~ 다 잡아먹어 버리겠다!"',voice:{pitch:0.65,rate:1.1,volume:1}},
+  {bg:0,banner:'🐺 2장: 늑대가 나타났어요!',chars:{c1:{x:'10%',op:1},c2:{x:'33%',op:1},c3:{x:'56%',op:1},cWolf:{x:'68%',op:1}},anim:{c1:'scared',c2:'scared',c3:'scared',cWolf:'angry'},houses:{},wind:false,fire:false,speaker:'삼형제 🐷',speakerColor:'#e65100',text:'"으악, 늑대다! 돼지 살려!\n집을 만들어 볼까?" "그거 좋은 생각이야!"',voice:{pitch:1.4,rate:1.15,volume:1}},
+  {bg:1,banner:'🌾 3장: 첫째의 지푸라기 집',chars:{c1:{x:'24%',op:1},c2:{x:'-25%',op:0},c3:{x:'-25%',op:0},cWolf:{x:'110%',op:0}},anim:{c1:'float'},houses:{hStraw:true,hWood:false,hBrick:false},wind:false,fire:false,speaker:'내레이터',speakerColor:'#4e342e',text:'첫째 돼지가 지푸라기로 집을 지었어요. 금방 다 지었죠!',voice:{pitch:1.0,rate:0.9,volume:1}},
+  {bg:1,banner:'🌾 3장: 첫째의 지푸라기 집',chars:{c1:{x:'24%',op:1},c2:{x:'-25%',op:0},c3:{x:'-25%',op:0},cWolf:{x:'68%',op:1}},anim:{c1:'scared',cWolf:'angry'},houses:{hStraw:true},wind:false,fire:false,speaker:'늑대 🐺',speakerColor:'#424242',text:'"으흐흐 맛있겠다. 돼지야 돼지야, 문 열어봐."\n"안되요 안돼! 코끼리 아저씨가 안된대요."\n"그럼, 우— 훅—!"',voice:{pitch:0.65,rate:1.05,volume:1}},
+  {bg:1,banner:'🌾 지푸라기 집이 날아갔어요!',chars:{c1:{x:'24%',op:1},c2:{x:'-25%',op:0},c3:{x:'-25%',op:0},cWolf:{x:'68%',op:1}},anim:{c1:'run',cWolf:'angry'},houses:{hStraw:true},wind:true,fire:false,speaker:'첫째 🐷',speakerColor:'#c2185b',text:'"으악! 내 집! 도망가자!"\n첫째 돼지 판다가 둘째네 집으로 도망갔어요.',voice:{pitch:1.4,rate:1.2,volume:1}},
+  {bg:2,banner:'🌲 4장: 둘째의 나무 집',chars:{c1:{x:'9%',op:1},c2:{x:'27%',op:1},c3:{x:'-25%',op:0},cWolf:{x:'110%',op:0}},anim:{c1:'float',c2:'float'},houses:{hStraw:false,hWood:true,hBrick:false},wind:false,fire:false,speaker:'내레이터',speakerColor:'#4e342e',text:'둘째 고양이는 나무로 집을 지었어요.\n"야 둘째야! 늑대가 와서 내 집을 다 날려버렸어!"\n"늑대? 무서워 하지마. 내 집은 나무로 만들었는걸!"',voice:{pitch:1.0,rate:0.9,volume:1}},
+  {bg:2,banner:'🌲 4장: 늑대가 또 왔어요!',chars:{c1:{x:'9%',op:1},c2:{x:'27%',op:1},c3:{x:'-25%',op:0},cWolf:{x:'68%',op:1}},anim:{c1:'scared',c2:'scared',cWolf:'angry'},houses:{hWood:true},wind:false,fire:false,speaker:'늑대 🐺',speakerColor:'#424242',text:'"돼지야, 돼지야, 문 열어봐."\n"안돼 안돼. 문 열면 안 돼."\n"그렇다면, 좋았어. 훅 훅 훅, 우—!"',voice:{pitch:0.65,rate:1.08,volume:1}},
+  {bg:2,banner:'🌲 나무 집도 날아갔어요!',chars:{c1:{x:'9%',op:1},c2:{x:'27%',op:1},c3:{x:'-25%',op:0},cWolf:{x:'68%',op:1}},anim:{c1:'run',c2:'run',cWolf:'angry'},houses:{hWood:true},wind:true,fire:false,speaker:'내레이터',speakerColor:'#4e342e',text:'"으악, 내 집! 도망가자!"\n첫째와 둘째가 셋째네 집으로 도망을 갔습니다.',voice:{pitch:1.0,rate:0.9,volume:1}},
+  {bg:3,banner:'🧱 5장: 셋째의 튼튼한 벽돌 집!',chars:{c1:{x:'5%',op:1},c2:{x:'20%',op:1},c3:{x:'36%',op:1},cWolf:{x:'74%',op:1}},anim:{c1:'float',c2:'float',c3:'float',cWolf:'angry'},houses:{hStraw:false,hWood:false,hBrick:true},wind:false,fire:false,speaker:'셋째 🐷',speakerColor:'#1976d2',text:'"으야야~ 셋째야, 늑대가 왔어!"\n"늑대? 내 집은 벽돌이라 걱정 없어!"\n"돼지야, 돼지야, 문 열어봐." "안 돼!"',voice:{pitch:1.3,rate:0.98,volume:1}},
+  {bg:3,banner:'🧱 5장: 늑대가 불어도 끄떡없어!',chars:{c1:{x:'5%',op:1},c2:{x:'20%',op:1},c3:{x:'36%',op:1},cWolf:{x:'74%',op:1}},anim:{c1:'scared',c2:'scared',c3:'magic',cWolf:'angry'},houses:{hBrick:true},wind:true,fire:false,speaker:'늑대 🐺',speakerColor:'#424242',text:'"훠우우~ 훠우우~! 꿈쩍도 안 하잖아?"\n"역시 벽돌이 최고야! 그럼 굴뚝으로 들어가 볼까?"\n늑대는 굴뚝으로 들어갔어요.',voice:{pitch:0.65,rate:1.05,volume:1}},
+  {bg:4,banner:'🔥 6장: 셋째의 마법봉 작전!',chars:{c1:{x:'3%',op:1},c2:{x:'17%',op:1},c3:{x:'33%',op:1},cWolf:{x:'72%',op:1}},anim:{c1:'scared',c2:'scared',c3:'magic',cWolf:'run'},houses:{hBrick:true},wind:false,fire:false,speaker:'셋째 🐷',speakerColor:'#bf360c',text:'"으아~ 무서워!" "아, 맞다. 방법이 있어!"\n수리수리 마수리, 불을 켜라!',voice:{pitch:1.3,rate:1.0,volume:1}},
+  {bg:4,banner:'🔥 6장: 뜨겁다 뜨거워!',chars:{c1:{x:'3%',op:1},c2:{x:'17%',op:1},c3:{x:'33%',op:1},cWolf:{x:'68%',op:1}},anim:{c1:'celebrate',c2:'float',c3:'magic',cWolf:'scared'},houses:{hBrick:true},wind:false,fire:true,speaker:'늑대 🐺',speakerColor:'#424242',text:'"으아~ 뜨거워!!"',voice:{pitch:0.65,rate:1.3,volume:1}},
+  {bg:4,banner:'🏃 7장: 늑대가 도망가요!',chars:{c1:{x:'3%',op:1},c2:{x:'17%',op:1},c3:{x:'33%',op:1},cWolf:{x:'82%',op:1}},anim:{c1:'jump',c2:'jump',c3:'celebrate',cWolf:'run'},houses:{},wind:false,fire:true,speaker:'늑대 🐺',speakerColor:'#424242',text:'"으아~ 늑대 살려~!!" "으아~ 으아~ 으아~ 으아 ㅠ!!"\n늑대는 마을을 도망갔어요.',voice:{pitch:0.65,rate:1.35,volume:1}},
+  {bg:5,banner:'🎉 8장: 만세! 늑대를 물리쳤어요!',chars:{c1:{x:'8%',op:1},c2:{x:'28%',op:1},c3:{x:'48%',op:1},cWolf:{x:'110%',op:0}},anim:{c1:'celebrate',c2:'celebrate',c3:'celebrate'},houses:{hStraw:false,hWood:false,hBrick:false},wind:false,fire:false,speaker:'삼형제 🐷🐷🐷',speakerColor:'#e65100',text:'"만세~~!! 늑대를 물리쳤어!"\n우리가 해냈어! 삼형제는 행복하게 살았답니다!',voice:{pitch:1.3,rate:0.95,volume:1}}
 ];
 
-var TOTAL = SCENES.length;
-
-// ══════════════════════════════════════════════════════
-// ENGINE
-// ══════════════════════════════════════════════════════
-var progEl = document.getElementById(‘prog’);
-for (var pi = 0; pi < TOTAL; pi++) {
-var pd = document.createElement(‘div’); pd.className = ‘dot’; progEl.appendChild(pd);
+const totalSteps=scenes.length;
+let step=-1,soundOn=true,autoPlay=false,autoTimer=null,speaking=false;
+const progEl=document.getElementById(‘progress’);
+for(let i=0;i<totalSteps;i++){const d=document.createElement(‘div’);d.className=‘dot’;progEl.appendChild(d);}
+const dots=progEl.querySelectorAll(’.dot’);
+const titleCard=document.getElementById(‘title-card’);
+const bannerEl=document.getElementById(‘scene-banner’);
+const dialogEl=document.getElementById(‘dialog’);
+const headerEl=document.getElementById(‘dialog-header’);
+const bodyEl=document.getElementById(‘dialog-body’);
+const hintEl=document.getElementById(‘next-hint’);
+const waveEl=document.getElementById(‘voice-wave’);
+const btnSound=document.getElementById(‘btnSound’);
+const btnReplay=document.getElementById(‘btnReplay’);
+const btnAuto=document.getElementById(‘btnAuto’);
+const windEl=document.getElementById(‘wind-lines’);
+const fireEl=document.getElementById(‘fire-anim’);
+const chars={c1:document.getElementById(‘c1’),c2:document.getElementById(‘c2’),c3:document.getElementById(‘c3’),cWolf:document.getElementById(‘cWolf’)};
+const houseEls={hStraw:document.getElementById(‘hStraw’),hWood:document.getElementById(‘hWood’),hBrick:document.getElementById(‘hBrick’)};
+const bgs=[0,1,2,3,4,5].map(i=>document.getElementById(‘bg’+i));
+const speakerMeta={‘내레이터’:{bg:’#4e342e’,emoji:‘📖’},‘삼형제 🐷🐷🐷’:{bg:’#f57c00’,emoji:‘🐷’},‘삼형제 🐷’:{bg:’#e65100’,emoji:‘🐷’},‘늑대 🐺’:{bg:’#424242’,emoji:‘🐺’},‘첫째 🐷’:{bg:’#c2185b’,emoji:‘🐷’},‘셋째 🐷’:{bg:’#1976d2’,emoji:‘🐷’}};
+let koVoice=null;
+function loadVoices(){const vs=speechSynthesis.getVoices();koVoice=vs.find(v=>v.lang===‘ko-KR’)||vs.find(v=>v.lang.startsWith(‘ko’))||vs[0]||null;}
+loadVoices();
+if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=loadVoices;
+function speak(text,vp,onDone){
+if(!soundOn){if(onDone)onDone();return;}
+speechSynthesis.cancel();
+const clean=text.replace(/[🐷🐺📖🌾🌲🧱🔥🏃🎉]/g,’’).replace(/\n/g,’ ‘).trim();
+const utt=new SpeechSynthesisUtterance(clean);
+utt.lang=‘ko-KR’;utt.voice=koVoice;utt.pitch=vp.pitch;utt.rate=vp.rate;utt.volume=vp.volume;
+utt.onstart=()=>{speaking=true;waveEl.classList.add(‘on’);};
+utt.onend=()=>{speaking=false;waveEl.classList.remove(‘on’);if(onDone)onDone();};
+utt.onerror=()=>{speaking=false;waveEl.classList.remove(‘on’);if(onDone)onDone();};
+speechSynthesis.speak(utt);
 }
-var dots     = progEl.querySelectorAll(’.dot’);
-var titleEl  = document.getElementById(‘title’);
-var bannerEl = document.getElementById(‘banner’);
-var dialogEl = document.getElementById(‘dialog’);
-var dheadEl  = document.getElementById(‘dhead’);
-var dbodyEl  = document.getElementById(‘dbody’);
-var hintEl   = document.getElementById(‘hint’);
-var windEl   = document.getElementById(‘wind’);
-var fireEl   = document.getElementById(‘fire’);
-var charEls  = { c1:document.getElementById(‘c1’), c2:document.getElementById(‘c2’),
-c3:document.getElementById(‘c3’), cW:document.getElementById(‘cW’) };
-var houseEls = { hStraw:document.getElementById(‘hStraw’), hWood:document.getElementById(‘hWood’),
-hBrick:document.getElementById(‘hBrick’) };
-var bgEls    = [0,1,2,3,4,5].map(function(n){ return document.getElementById(‘bg’+n); });
-
-var allAnims = [‘af’,‘aw’,‘as_sc’,‘as_an’,‘aj’,‘ac’,‘ar’,‘am’];
-function setAnim(el, anim) {
-allAnims.forEach(function(a) { el.classList.remove(a); });
-if (anim) el.classList.add(anim);
+function stopSpeech(){speechSynthesis.cancel();speaking=false;waveEl.classList.remove(‘on’);}
+const animList=[‘float’,‘scared’,‘angry’,‘jump’,‘celebrate’,‘run’,‘magic’];
+function setAnim(el,anim){animList.forEach(a=>el.classList.remove(‘anim-’+a));if(anim)el.classList.add(‘anim-’+anim);}
+function confetti(){const cols=[’#f44336’,’#e91e63’,’#9c27b0’,’#2196f3’,’#4caf50’,’#ffeb3b’,’#ff9800’];for(let i=0;i<55;i++){const c=document.createElement(‘div’);c.className=‘confetti’;c.style.left=Math.random()*100+‘vw’;c.style.background=cols[Math.floor(Math.random()*cols.length)];c.style.animationDuration=(1.8+Math.random()*2.5)+‘s’;c.style.animationDelay=(Math.random()*2)+‘s’;c.style.width=(8+Math.random()*8)+‘px’;c.style.height=(12+Math.random()*10)+‘px’;document.getElementById(‘stage’).appendChild(c);setTimeout(()=>c.remove(),5000);}}
+function scheduleAuto(delay){clearTimeout(autoTimer);if(autoPlay)autoTimer=setTimeout(()=>advance(),delay);}
+function advance(){
+clearTimeout(autoTimer);stopSpeech();
+if(step===-1){titleCard.style.opacity=‘0’;setTimeout(()=>titleCard.style.display=‘none’,900);bannerEl.style.display=‘block’;dialogEl.style.display=‘block’;hintEl.style.display=‘block’;step=0;}
+else{step++;}
+if(step>=totalSteps){step=-1;titleCard.style.display=‘flex’;setTimeout(()=>titleCard.style.opacity=‘1’,10);bannerEl.style.display=‘none’;dialogEl.style.display=‘none’;hintEl.style.display=‘none’;windEl.classList.remove(‘active’);fireEl.style.display=‘none’;dots.forEach(d=>d.classList.remove(‘done’));Object.values(chars).forEach(c=>{c.style.opacity=‘0’;c.style.left=’-25%’;});Object.values(houseEls).forEach(h=>h.style.display=‘none’);return;}
+const sc=scenes[step];
+bgs.forEach((b,i)=>b.classList.toggle(‘active’,i===sc.bg));
+Object.entries(sc.houses||{}).forEach(([k,v])=>{if(houseEls[k])houseEls[k].style.display=v?‘block’:‘none’;});
+windEl.classList.toggle(‘active’,!!sc.wind);
+fireEl.style.display=sc.fire?‘block’:‘none’;
+Object.entries(sc.chars).forEach(([id,cfg])=>{const el=chars[id];if(!el)return;el.style.opacity=cfg.op;if(cfg.x!==undefined)el.style.left=cfg.x;if(cfg.right!==undefined){el.style.left=‘auto’;el.style.right=cfg.right;}});
+setTimeout(()=>{Object.keys(chars).forEach(id=>{setAnim(chars[id],sc.anim&&sc.anim[id]?sc.anim[id]:’’);});},500);
+const meta=speakerMeta[sc.speaker]||{bg:’#4e342e’,emoji:‘📖’};
+headerEl.style.background=sc.speakerColor||meta.bg;
+headerEl.innerHTML=`<span>${meta.emoji}</span> <span>${sc.speaker}</span>`;
+bodyEl.textContent=’’;
+dialogEl.style.animation=‘none’;void dialogEl.offsetWidth;
+dialogEl.style.animation=‘popIn 0.4s cubic-bezier(.175,.885,.32,1.275)’;
+const fullText=sc.text;let i=0;
+const cursor=document.createElement(‘span’);cursor.id=‘cursor’;bodyEl.appendChild(cursor);
+const typeInterval=setInterval(()=>{if(i<fullText.length){cursor.before(fullText[i]);i++;}else{clearInterval(typeInterval);cursor.remove();}},45);
+setTimeout(()=>{speak(sc.text,sc.voice,()=>{scheduleAuto(1200);});},350);
+if(sc.bg===5&&step===totalSteps-1)setTimeout(confetti,500);
+bannerEl.textContent=sc.banner;
+dots.forEach((d,i)=>d.classList.toggle(‘done’,i<=step));
 }
-
-function typewrite(text) {
-if (typeTimer) clearInterval(typeTimer);
-dbodyEl.textContent = ‘’;
-var cur = document.createElement(‘span’); cur.id = ‘cur’;
-dbodyEl.appendChild(cur);
-var idx = 0;
-typeTimer = setInterval(function() {
-if (idx < text.length) { cur.before(text[idx++]); }
-else { clearInterval(typeTimer); cur.remove(); }
-}, 42);
-}
-
-function confetti() {
-var cols = [’#f44336’,’#e91e63’,’#9c27b0’,’#2196f3’,’#4caf50’,’#ffeb3b’,’#ff9800’];
-for (var ci = 0; ci < 55; ci++) {
-var c = document.createElement(‘div’); c.className = ‘cf’;
-c.style.left = (Math.random() * 100) + ‘vw’;
-c.style.background = cols[Math.floor(Math.random() * cols.length)];
-c.style.animationDuration = (2 + Math.random() * 3) + ‘s’;
-c.style.animationDelay   = (Math.random() * 2) + ‘s’;
-c.style.width  = (7 + Math.random() * 9) + ‘px’;
-c.style.height = (10 + Math.random() * 12) + ‘px’;
-document.getElementById(‘stage’).appendChild(c);
-setTimeout((function(el){ return function(){ el.remove(); }; })(c), 6000);
-}
-}
-
-function starBurst(x, y) {
-var s = document.createElement(‘div’); s.className = ‘sb’;
-s.style.left = x + ‘px’; s.style.top = y + ‘px’; s.textContent = ‘✨’;
-document.getElementById(‘stage’).appendChild(s);
-setTimeout(function() { s.remove(); }, 700);
-}
-
-function shake() {
-var st = document.getElementById(‘stage’);
-st.classList.add(‘shake’);
-setTimeout(function() { st.classList.remove(‘shake’); }, 800);
-}
-
-function advance() {
-clearTimeout(autoTimer);
-stopSpeak();
-
-```
-if (step === -1) {
-    titleEl.style.opacity = '0';
-    setTimeout(function() { titleEl.style.display = 'none'; }, 850);
-    bannerEl.style.display = 'block';
-    dialogEl.style.display = 'block';
-    hintEl.style.display = 'block';
-    step = 0;
-} else {
-    step++;
-}
-
-if (step >= TOTAL) {
-    step = -1;
-    stopBGM();
-    titleEl.style.display = 'flex';
-    setTimeout(function() { titleEl.style.opacity = '1'; }, 10);
-    bannerEl.style.display = 'none';
-    dialogEl.style.display = 'none';
-    hintEl.style.display = 'none';
-    windEl.classList.remove('on');
-    fireEl.style.display = 'none';
-    dots.forEach(function(d) { d.classList.remove('on'); });
-    Object.keys(charEls).forEach(function(k) {
-        charEls[k].style.opacity = '0'; charEls[k].style.left = '-30%';
-    });
-    Object.keys(houseEls).forEach(function(k) { houseEls[k].style.display = 'none'; });
-    return;
-}
-
-var sc = SCENES[step];
-bgEls.forEach(function(b, i) { b.classList.toggle('active', i === sc.bg); });
-if (sc.bgm) playBGM(sc.bgm);
-if (sc.sfx) setTimeout(function() { playSFX(sc.sfx); }, 260);
-windEl.classList.toggle('on', !!sc.wind);
-fireEl.style.display = sc.fire ? 'block' : 'none';
-if (sc.wind) setTimeout(shake, 300);
-
-Object.keys(sc.houses || {}).forEach(function(k) {
-    if (houseEls[k]) houseEls[k].style.display = sc.houses[k] ? 'block' : 'none';
-});
-Object.keys(sc.chars).forEach(function(id) {
-    var cfg = sc.chars[id], el = charEls[id]; if (!el) return;
-    el.style.opacity = cfg.op;
-    el.style.left    = cfg.x;
-});
-setTimeout(function() {
-    Object.keys(charEls).forEach(function(id) {
-        setAnim(charEls[id], sc.anims && sc.anims[id] ? sc.anims[id] : '');
-    });
-}, 500);
-
-bannerEl.textContent = sc.banner;
-dheadEl.style.background = sc.sc;
-dheadEl.innerHTML = '<span style="font-size:1.2em">' + sc.se + '</span> <span>' + sc.spk + '</span>';
-dialogEl.style.animation = 'none'; void dialogEl.offsetWidth;
-dialogEl.style.animation = 'dPop 0.4s cubic-bezier(.175,.885,.32,1.275)';
-typewrite(sc.text);
-
-setTimeout(function() {
-    speak(sc.text, sc.voice, function() {
-        if (autoOn) autoTimer = setTimeout(advance, 1000);
-    });
-}, 380);
-
-if (sc.banner.indexOf('만세') >= 0) {
-    setTimeout(confetti, 500);
-    setTimeout(function() { starBurst(window.innerWidth * 0.28, window.innerHeight * 0.28); }, 700);
-    setTimeout(function() { starBurst(window.innerWidth * 0.62, window.innerHeight * 0.38); }, 950);
-}
-if (sc.fire) setTimeout(function() { starBurst(window.innerWidth * 0.7, window.innerHeight * 0.42); }, 500);
-dots.forEach(function(d, i) { d.classList.toggle('on', i <= step); });
-```
-
-}
-
-// ── CONTROLS ──
-document.getElementById(‘bSnd’).addEventListener(‘click’, function(e) {
-e.stopPropagation(); ensureCtx();
-sndEnabled = !sndEnabled;
-this.textContent = sndEnabled ? ‘🔊’ : ‘🔇’;
-if (!sndEnabled) stopSpeak();
-else if (step >= 0 && step < TOTAL) speak(SCENES[step].text, SCENES[step].voice, null);
-});
-document.getElementById(‘bBgm’).addEventListener(‘click’, function(e) {
-e.stopPropagation(); ensureCtx();
-bgmEnabled = !bgmEnabled;
-this.textContent = bgmEnabled ? ‘🎵’ : ‘🔕’;
-if (!bgmEnabled) stopBGM();
-else if (step >= 0 && step < TOTAL && SCENES[step].bgm) playBGM(SCENES[step].bgm);
-});
-document.getElementById(‘bRep’).addEventListener(‘click’, function(e) {
-e.stopPropagation();
-if (step >= 0 && step < TOTAL) { stopSpeak(); speak(SCENES[step].text, SCENES[step].voice, null); }
-});
-document.getElementById(‘bAuto’).addEventListener(‘click’, function(e) {
-e.stopPropagation(); ensureCtx();
-autoOn = !autoOn;
-this.textContent = autoOn ? ‘▶’ : ‘⏸’;
-if (!autoOn) clearTimeout(autoTimer);
-});
-// 헨젤과 동일한 방식 — click 하나만
-document.getElementById(‘stage’).addEventListener(‘click’, advance);
+btnSound.addEventListener(‘click’,e=>{e.stopPropagation();soundOn=!soundOn;btnSound.textContent=soundOn?‘🔊’:‘🔇’;if(!soundOn)stopSpeech();else if(step>=0&&step<totalSteps)speak(scenes[step].text,scenes[step].voice,()=>scheduleAuto(1200));});
+btnReplay.addEventListener(‘click’,e=>{e.stopPropagation();if(step>=0&&step<totalSteps){stopSpeech();speak(scenes[step].text,scenes[step].voice,()=>scheduleAuto(1200));}});
+btnAuto.addEventListener(‘click’,e=>{e.stopPropagation();autoPlay=!autoPlay;btnAuto.textContent=autoPlay?‘▶’:‘⏸’;if(autoPlay&&!speaking)scheduleAuto(800);else clearTimeout(autoTimer);});
+document.getElementById(‘stage’).addEventListener(‘click’,advance);
 </script>
 
 </body>

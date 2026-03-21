@@ -272,7 +272,7 @@ animation:ff 0.3s infinite alternate;}
 
 <!-- TITLE -->
 
-<div id="title" onclick="advance()" style="cursor:pointer;">
+<div id="title" style="cursor:pointer;">
   <div class="cover">
     <div style="font-size:clamp(2.5rem,8vw,4rem);animation:hBob 0.8s infinite alternate">🐷🐷🐷</div>
     <h1>아기 돼지 삼형제</h1>
@@ -939,28 +939,8 @@ autoOn = !autoOn;
 this.textContent = autoOn ? ‘▶’ : ‘⏸’;
 if (!autoOn) clearTimeout(autoTimer);
 });
-// ── TAP / CLICK ──
-// iOS Safari: simplest possible approach - no ensureCtx in advance path
-var lastTap = 0;
-
-function onTap(e) {
-if (e.target.closest && e.target.closest(’#ctrls’)) return;
-var now = Date.now();
-if (now - lastTap < 500) return;
-lastTap = now;
-// init audio context on first gesture
-if (!ctx) {
-try {
-var C = window.AudioContext || window.webkitAudioContext;
-if (C) { ctx = new C(); }
-} catch(e2) {}
-}
-if (ctx && ctx.state === ‘suspended’) { try { ctx.resume(); } catch(e2) {} }
-advance();
-}
-
-document.addEventListener(‘touchend’, onTap, false);
-document.addEventListener(‘click’,    onTap, false);
+// 헨젤과 동일한 방식 — click 하나만
+document.getElementById(‘stage’).addEventListener(‘click’, advance);
 </script>
 
 </body>

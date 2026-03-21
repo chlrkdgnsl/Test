@@ -272,7 +272,7 @@ animation:ff 0.3s infinite alternate;}
 
 <!-- TITLE -->
 
-<div id="title">
+<div id="title" onclick="advance()" style="cursor:pointer;">
   <div class="cover">
     <div style="font-size:clamp(2.5rem,8vw,4rem);animation:hBob 0.8s infinite alternate">🐷🐷🐷</div>
     <h1>아기 돼지 삼형제</h1>
@@ -835,8 +835,6 @@ setTimeout(function() { st.classList.remove(‘shake’); }, 800);
 }
 
 function advance() {
-// MUST call ensureCtx() inside user gesture handler
-ensureCtx();
 clearTimeout(autoTimer);
 stopSpeak();
 
@@ -941,15 +939,23 @@ autoOn = !autoOn;
 this.textContent = autoOn ? ‘▶’ : ‘⏸’;
 if (!autoOn) clearTimeout(autoTimer);
 });
-// ── TAP / CLICK — attach to document so nothing blocks it ──
+// ── TAP / CLICK ──
+// iOS Safari: simplest possible approach - no ensureCtx in advance path
 var lastTap = 0;
 
 function onTap(e) {
-// ignore taps on control buttons
 if (e.target.closest && e.target.closest(’#ctrls’)) return;
 var now = Date.now();
-if (now - lastTap < 400) return; // debounce double-fire
+if (now - lastTap < 500) return;
 lastTap = now;
+// init audio context on first gesture
+if (!ctx) {
+try {
+var C = window.AudioContext || window.webkitAudioContext;
+if (C) { ctx = new C(); }
+} catch(e2) {}
+}
+if (ctx && ctx.state === ‘suspended’) { try { ctx.resume(); } catch(e2) {} }
 advance();
 }
 

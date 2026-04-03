@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HEX SIEGE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;700&display=swap');
+
+- { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+–sand-light: #e8d4a8;
+–sand-dark: #8b6914;
+–officer: #e8506a;
+–officer-dark: #c03050;
+–thief: #4ab8c8;
+–thief-dark: #2a98a8;
+–empty: #f5e8c8;
+–empty-dark: #d4c090;
+–bg: #d4a96a;
+}
+
+body {
+background: var(–bg);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+font-family: ‘Noto Sans KR’, sans-serif;
+overflow: hidden;
+background-image:
+radial-gradient(ellipse at 20% 20%, #b8924a 0%, transparent 60%),
+radial-gradient(ellipse at 80% 80%, #c8a060 0%, transparent 60%);
+}
+
+.deco { position: fixed; pointer-events: none; opacity: 0.12; font-size: 80px; }
+.deco-tl { top: 20px; left: 20px; transform: rotate(-20deg); }
+.deco-br { bottom: 20px; right: 20px; transform: rotate(20deg); }
+
+/* ===== MODE SELECT ===== */
+#mode-screen {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 18px;
+padding: 24px 20px;
+max-width: 380px;
+width: 100%;
+}
+
+.mode-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 56px;
+letter-spacing: 8px;
+color: #fff;
+text-shadow: 4px 4px 0 var(–sand-dark), 0 0 30px rgba(0,0,0,0.3);
+line-height: 1;
+text-align: center;
+}
+
+.mode-sub {
+font-size: 13px;
+color: rgba(255,255,255,0.8);
+text-align: center;
+margin-top: -10px;
+}
+
+.mode-cards {
+display: flex;
+flex-direction: column;
+gap: 12px;
+width: 100%;
+}
+
+.mode-card {
+background: rgba(255,255,255,0.14);
+border: 2px solid rgba(255,255,255,0.28);
+border-radius: 20px;
+padding: 18px 22px;
+cursor: pointer;
+transition: all 0.18s;
+display: flex;
+align-items: center;
+gap: 16px;
+}
+
+.mode-card:active {
+background: rgba(255,255,255,0.26);
+border-color: rgba(255,255,255,0.7);
+transform: scale(0.97);
+}
+
+.mode-emoji { font-size: 42px; line-height: 1; flex-shrink: 0; }
+.mode-info  { flex: 1; }
+
+.mode-name {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 26px;
+letter-spacing: 3px;
+color: #fff;
+line-height: 1;
+}
+
+.mode-desc { font-size: 12px; color: rgba(255,255,255,0.72); margin-top: 4px; line-height: 1.4; }
+.mode-arrow { font-size: 24px; color: rgba(255,255,255,0.45); }
+
+.diff-section { text-align: center; }
+.diff-label { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+
+/* ===== GAME SCREEN ===== */
+#game-screen { display: none; width: 100%; max-width: 420px; padding: 8px 10px; }
+
+#game-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 34px;
+letter-spacing: 6px;
+color: #fff;
+text-shadow: 3px 3px 0 var(–sand-dark);
+text-align: center;
+margin-bottom: 6px;
+}
+
+#score-bar {
+display: flex;
+align-items: stretch;
+gap: 8px;
+margin-bottom: 8px;
+width: 100%;
+}
+
+.score-block {
+flex: 1;
+border-radius: 12px;
+padding: 7px 10px;
+display: flex;
+align-items: center;
+gap: 6px;
+box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.score-block.active-turn {
+box-shadow: 0 0 0 3px #fff, 0 4px 0 rgba(0,0,0,0.2);
+transform: scale(1.04);
+}
+
+.score-block.officer { background: var(–officer); flex-direction: row-reverse; }
+.score-block.thief   { background: var(–thief); }
+
+.score-icon { font-size: 20px; line-height: 1; }
+
+.score-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+
+.score-num {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 26px;
+color: #fff;
+text-shadow: 1px 2px 0 rgba(0,0,0,0.2);
+line-height: 1;
+}
+
+.score-label { font-size: 9px; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 1px; }
+.score-tag   { font-size: 9px; color: rgba(255,255,255,0.6); }
+
+#turn-indicator {
+border-radius: 20px;
+padding: 5px 18px;
+font-size: 12px;
+font-weight: 700;
+color: #fff;
+letter-spacing: 1px;
+margin-bottom: 4px;
+transition: background 0.3s;
+text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+text-align: center;
+width: 100%;
+}
+
+#turn-indicator.officer-turn { background: rgba(232,80,106,0.75); }
+#turn-indicator.thief-turn   { background: rgba(74,184,200,0.75); }
+
+canvas { display: block; touch-action: none; width: 100%; }
+
+#btn-row {
+display: flex;
+gap: 8px;
+margin-top: 8px;
+justify-content: center;
+}
+
+.btn {
+padding: 9px 16px;
+border-radius: 30px;
+border: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 17px;
+letter-spacing: 2px;
+cursor: pointer;
+box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+transition: transform 0.1s, box-shadow 0.1s;
+color: #fff;
+}
+
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.btn-restart { background: var(–sand-dark); }
+.btn-undo    { background: #666; }
+.btn-back    { background: #444; }
+
+/* diff row */
+#diff-row { display: flex; gap: 6px; margin-bottom: 4px; }
+
+.diff-btn {
+padding: 4px 13px;
+border-radius: 20px;
+border: 2px solid rgba(255,255,255,0.35);
+background: rgba(255,255,255,0.13);
+color: #fff;
+font-size: 11px;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.18s;
+letter-spacing: 1px;
+}
+
+.diff-btn.active { background: rgba(255,255,255,0.32); border-color: #fff; }
+
+/* ===== PASS SCREEN ===== */
+#pass-screen {
+position: fixed; inset: 0;
+display: none;
+align-items: center;
+justify-content: center;
+flex-direction: column;
+z-index: 60;
+background: rgba(0,0,0,0.78);
+}
+
+#pass-screen.show { display: flex; }
+
+.pass-box {
+border-radius: 24px;
+padding: 34px 48px;
+text-align: center;
+box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+max-width: 320px;
+width: 90%;
+}
+
+.pass-box.officer { background: var(–officer); }
+.pass-box.thief   { background: var(–thief); }
+
+.pass-emoji { font-size: 52px; margin-bottom: 8px; }
+
+.pass-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 38px;
+letter-spacing: 3px;
+color: #fff;
+margin-bottom: 6px;
+}
+
+.pass-sub { font-size: 13px; color: rgba(255,255,255,0.85); margin-bottom: 22px; line-height: 1.5; }
+
+.pass-btn {
+padding: 12px 38px;
+border-radius: 30px; border: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 22px; letter-spacing: 2px;
+cursor: pointer; color: #333;
+background: #fff;
+box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+}
+
+/* ===== RESULT ===== */
+#overlay {
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.72);
+display: flex; align-items: center; justify-content: center;
+z-index: 100;
+opacity: 0; pointer-events: none;
+transition: opacity 0.4s;
+}
+
+#overlay.show { opacity: 1; pointer-events: all; }
+
+.result-box {
+background: var(–sand-light);
+border-radius: 24px;
+padding: 32px 44px;
+text-align: center;
+box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+transform: scale(0.82);
+transition: transform 0.4s;
+max-width: 320px;
+width: 90%;
+}
+
+#overlay.show .result-box { transform: scale(1); }
+
+.result-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 46px;
+letter-spacing: 4px;
+margin-bottom: 6px;
+}
+
+.result-sub { font-size: 14px; color: #555; margin-bottom: 20px; line-height: 1.5; }
+
+.result-btns { display: flex; gap: 10px; justify-content: center; }
+
+.result-btn {
+padding: 10px 24px;
+border-radius: 30px; border: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 19px; letter-spacing: 2px;
+cursor: pointer; color: #fff;
+box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+}
+
+.result-btn.again { background: var(–sand-dark); }
+.result-btn.home  { background: #555; }
+</style>
+
+</head>
+<body>
+
+<div class="deco deco-tl">🏜️</div>
+<div class="deco deco-br">🚗</div>
+
+<!-- ===== MODE SELECT ===== -->
+
+<div id="mode-screen">
+  <div class="mode-title">HEX<br>SIEGE</div>
+  <div class="mode-sub">경찰관이 도둑을 잡아라!</div>
+
+  <div class="mode-cards">
+    <div class="mode-card" onclick="startGame('1p')">
+      <div class="mode-emoji">🤖</div>
+      <div class="mode-info">
+        <div class="mode-name">1인 플레이</div>
+        <div class="mode-desc">나 (경찰) vs AI (도둑)<br>혼자서 AI와 대결!</div>
+      </div>
+      <div class="mode-arrow">›</div>
+    </div>
+
+```
+<div class="mode-card" onclick="startGame('2p')">
+  <div class="mode-emoji">👥</div>
+  <div class="mode-info">
+    <div class="mode-name">2인 플레이</div>
+    <div class="mode-desc">P1 (경찰) vs P2 (도둑)<br>같은 기기에서 번갈아 플레이!</div>
+  </div>
+  <div class="mode-arrow">›</div>
+</div>
+```
+
+  </div>
+
+  <div class="diff-section">
+    <div class="diff-label">AI 난이도 (1인 전용)</div>
+    <div style="display:flex;gap:8px;justify-content:center;" id="diff-home">
+      <button class="diff-btn active" onclick="pickDiff('easy',this)">EASY</button>
+      <button class="diff-btn" onclick="pickDiff('normal',this)">NORMAL</button>
+      <button class="diff-btn" onclick="pickDiff('hard',this)">HARD</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+
+<div id="game-screen">
+  <div id="game-title">HEX SIEGE</div>
+
+  <div id="score-bar">
+    <div class="score-block officer" id="sb-officer">
+      <span class="score-icon">👮‍♀️</span>
+      <div class="score-col">
+        <div class="score-num" id="officer-count">0</div>
+        <div class="score-label">OFFICER</div>
+        <div class="score-tag" id="officer-tag">P1</div>
+      </div>
+    </div>
+    <div class="score-block thief" id="sb-thief">
+      <div class="score-col">
+        <div class="score-num" id="thief-count">0</div>
+        <div class="score-label">THIEF</div>
+        <div class="score-tag" id="thief-tag">AI</div>
+      </div>
+      <span class="score-icon">🦹</span>
+    </div>
+  </div>
+
+  <div id="diff-row">
+    <button class="diff-btn" onclick="changeDiff('easy',this)">EASY</button>
+    <button class="diff-btn active" onclick="changeDiff('normal',this)">NORMAL</button>
+    <button class="diff-btn" onclick="changeDiff('hard',this)">HARD</button>
+  </div>
+
+  <div id="turn-indicator" class="officer-turn">👮‍♀️ 경찰 차례</div>
+
+<canvas id="gameCanvas"></canvas>
+
+  <div id="btn-row">
+    <button class="btn btn-back" onclick="goHome()">⌂ 홈</button>
+    <button class="btn btn-undo" onclick="undoMove()">↩ 무르기</button>
+    <button class="btn btn-restart" onclick="initGame()">↺ 재시작</button>
+  </div>
+</div>
+
+<!-- ===== PASS & PLAY SCREEN ===== -->
+
+<div id="pass-screen">
+  <div class="pass-box" id="pass-box">
+    <div class="pass-emoji" id="pass-emoji">📱</div>
+    <div class="pass-title" id="pass-title">화면 전달!</div>
+    <div class="pass-sub" id="pass-sub">다음 플레이어에게<br>기기를 넘겨주세요</div>
+    <button class="pass-btn" onclick="dismissPass()">준비됐어요 ▶</button>
+  </div>
+</div>
+
+<!-- ===== RESULT OVERLAY ===== -->
+
+<div id="overlay">
+  <div class="result-box">
+    <div class="result-title" id="result-title">WIN!</div>
+    <div class="result-sub" id="result-sub"></div>
+    <div class="result-btns">
+      <button class="result-btn again" onclick="initGame(); closeOverlay()">다시 하기</button>
+      <button class="result-btn home"  onclick="goHome(); closeOverlay()">홈으로</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CONSTANTS & STATE
+// ============================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+
+const OFFICER = 1, THIEF = 2, EMPTY = 0;
+
+const C = {
+  officer:'#e8506a', officerDark:'#c03050',
+  thief:'#4ab8c8',   thiefDark:'#2a98a8',
+  empty:'#f5e8c8',   emptyDark:'#d4c090',
+  highlight:'#ffe44d',
+  move:'#a8f080',  moveDark:'#68c040',
+  shadow:'rgba(0,0,0,0.25)',
+};
+
+let hexSize = 36;
+const COLS = 7;
+
+let grid = [], selected = null, validMoves = [];
+let turn = OFFICER;
+let history = [];
+let difficulty = 'normal';
+let gameMode  = '1p';
+let animating = false;
+let flashCells = [];
+let pendingPass = false;
+
+// ============================================================
+//  HOME SCREEN
+// ============================================================
+function pickDiff(d, btn) {
+  difficulty = d;
+  document.querySelectorAll('#diff-home .diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function startGame(mode) {
+  gameMode = mode;
+  document.getElementById('mode-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+
+  // Sync diff row visibility
+  const dr = document.getElementById('diff-row');
+  dr.style.display = mode === '1p' ? 'flex' : 'none';
+  // Sync active diff button
+  document.querySelectorAll('#diff-row .diff-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === difficulty);
+  });
+
+  // Player labels
+  document.getElementById('officer-tag').textContent = mode === '2p' ? 'P1' : '나';
+  document.getElementById('thief-tag').textContent   = mode === '2p' ? 'P2' : 'AI';
+
+  initGame();
+}
+
+function goHome() {
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('mode-screen').style.display = 'flex';
+  document.getElementById('pass-screen').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  animating = false;
+}
+
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function changeDiff(d, btn) {
+  difficulty = d;
+  document.querySelectorAll('#diff-row .diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initGame();
+}
+
+// ============================================================
+//  GRID
+// ============================================================
+function resize() {
+  const maxW = Math.min(window.innerWidth - 20, 400);
+  hexSize = Math.max(24, Math.min(40, Math.floor(maxW / (COLS * 2 + 1))));
+  canvas.width  = Math.ceil(hexSize * (COLS * 2 + 1.5));
+  canvas.height = Math.ceil(hexSize * (COLS * 1.8 + 0.5));
+}
+
+function hexToPixel(q, r) {
+  return {
+    x: canvas.width  / 2 + hexSize * 1.5 * q,
+    y: canvas.height / 2 + hexSize * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r),
+  };
+}
+
+function pixelToHex(px, py) {
+  const cx = px - canvas.width / 2, cy = py - canvas.height / 2;
+  return axialRound((2/3 * cx) / hexSize, (-1/3 * cx + Math.sqrt(3)/3 * cy) / hexSize);
+}
+
+function axialRound(q, r) {
+  const s = -q - r;
+  let rq = Math.round(q), rr = Math.round(r), rs = Math.round(s);
+  const dq = Math.abs(rq-q), dr = Math.abs(rr-r), ds = Math.abs(rs-s);
+  if (dq > dr && dq > ds) rq = -rr - rs;
+  else if (dr > ds) rr = -rq - rs;
+  return {q: rq, r: rr};
+}
+
+function getCell(q, r) { return grid.find(c => c.q === q && c.r === r); }
+
+function hexDist(a, b) {
+  return Math.max(Math.abs(a.q-b.q), Math.abs(a.r-b.r), Math.abs(a.q+a.r - b.q-b.r));
+}
+
+function neighbors(q, r, d = 1) { return grid.filter(c => hexDist({q,r}, c) === d); }
+
+function makeGrid() {
+  grid = [];
+  const R = Math.floor(COLS / 2);
+  for (let q = -R; q <= R; q++)
+    for (let r = -R; r <= R; r++)
+      if (Math.abs(q + r) <= R) grid.push({q, r, owner: EMPTY});
+}
+
+function initGame() {
+  makeGrid();
+  [[-3,0,OFFICER],[-2,-1,OFFICER],[3,0,THIEF],[2,1,THIEF]].forEach(([q,r,o]) => {
+    const c = getCell(q, r); if (c) c.owner = o;
+  });
+  turn = OFFICER; selected = null; validMoves = [];
+  history = []; flashCells = []; pendingPass = false;
+  document.getElementById('pass-screen').classList.remove('show');
+  resize();
+  updateUI();
+  draw();
+}
+
+// ============================================================
+//  MOVES
+// ============================================================
+function getValidMoves(q, r) {
+  return [
+    ...neighbors(q,r,1).filter(c=>c.owner===EMPTY).map(c=>({q:c.q,r:c.r,type:'clone'})),
+    ...neighbors(q,r,2).filter(c=>c.owner===EMPTY).map(c=>({q:c.q,r:c.r,type:'jump'})),
+  ];
+}
+
+function getAllMoves(player) {
+  const mv = [];
+  for (const cell of grid) {
+    if (cell.owner !== player) continue;
+    for (const m of getValidMoves(cell.q, cell.r))
+      mv.push({from:{q:cell.q,r:cell.r}, to:m, type:m.type});
+  }
+  return mv;
+}
+
+function applyMove(from, to, type, owner) {
+  history.push({grid: grid.map(c=>({...c})), turn});
+  const toCell = getCell(to.q, to.r);
+  if (type === 'jump') { const fc = getCell(from.q, from.r); if (fc) fc.owner = EMPTY; }
+  toCell.owner = owner;
+  const converted = [];
+  for (const nb of neighbors(to.q, to.r, 1)) {
+    if (nb.owner !== EMPTY && nb.owner !== owner) { nb.owner = owner; converted.push(nb); }
+  }
+  flashCells = converted.map(c => ({q:c.q, r:c.r, t:9}));
+}
+
+function undoMove() {
+  if (!history.length) return;
+  // 1P: undo 2 steps (player + AI); 2P: undo 1 step
+  const steps = (gameMode === '1p' && turn === OFFICER && history.length >= 2) ? 2 : 1;
+  let snap;
+  for (let i = 0; i < steps; i++) snap = history.pop();
+  if (snap) { grid = snap.grid; turn = snap.turn; }
+  selected = null; validMoves = []; flashCells = []; pendingPass = false;
+  document.getElementById('pass-screen').classList.remove('show');
+  updateUI(); draw();
+}
+
+// ============================================================
+//  TURN FLOW
+// ============================================================
+function afterPlayerMove() {
+  selected = null; validMoves = [];
+  updateUI(); draw();
+
+  const oMv = getAllMoves(OFFICER), tMv = getAllMoves(THIEF);
+  const oN  = grid.filter(c=>c.owner===OFFICER).length;
+  const tN  = grid.filter(c=>c.owner===THIEF).length;
+  const eN  = grid.filter(c=>c.owner===EMPTY).length;
+
+  if (eN === 0 || (!oMv.length && !tMv.length)) {
+    setTimeout(() => showResult(oN, tN), 400);
+    return;
+  }
+
+  // Advance turn
+  const next = turn === OFFICER ? THIEF : OFFICER;
+  turn = next;
+  if (turn === OFFICER && !oMv.length) turn = THIEF;
+  if (turn === THIEF   && !tMv.length) turn = OFFICER;
+  updateUI();
+
+  if (gameMode === '1p') {
+    if (turn === THIEF) scheduleAI();
+  } else {
+    showPassScreen();
+  }
+}
+
+// ============================================================
+//  PASS & PLAY
+// ============================================================
+function showPassScreen() {
+  pendingPass = true;
+  const box   = document.getElementById('pass-box');
+  const emoji = document.getElementById('pass-emoji');
+  const title = document.getElementById('pass-title');
+  const sub   = document.getElementById('pass-sub');
+
+  if (turn === OFFICER) {
+    box.className = 'pass-box officer';
+    emoji.textContent = '👮‍♀️';
+    title.textContent = 'P1 경찰 차례!';
+    sub.textContent   = 'P1 (경찰) 에게\n기기를 넘겨주세요';
+  } else {
+    box.className = 'pass-box thief';
+    emoji.textContent = '🦹';
+    title.textContent = 'P2 도둑 차례!';
+    sub.textContent   = 'P2 (도둑) 에게\n기기를 넘겨주세요';
+  }
+  document.getElementById('pass-screen').classList.add('show');
+}
+
+function dismissPass() {
+  pendingPass = false;
+  document.getElementById('pass-screen').classList.remove('show');
+  draw();
+}
+
+// ============================================================
+//  AI
+// ============================================================
+function scheduleAI() {
+  animating = true;
+  setTimeout(() => { runAI(); animating = false; draw(); }, 520);
+}
+
+function simMove(g, from, to, type, player) {
+  const ng = g.map(c=>({...c}));
+  const tc = ng.find(c=>c.q===to.q&&c.r===to.r);
+  if (type === 'jump') { const fc = ng.find(c=>c.q===from.q&&c.r===from.r); if(fc) fc.owner = EMPTY; }
+  if (tc) tc.owner = player;
+  for (const c of ng) if (hexDist(c,to)===1 && c.owner!==EMPTY && c.owner!==player) c.owner = player;
+  return ng;
+}
+
+function scoreG(ng, player) {
+  let m=0,o=0;
+  for (const c of ng) { if(c.owner===player) m++; else if(c.owner!==EMPTY) o++; }
+  return m - o;
+}
+
+function runAI() {
+  const moves = getAllMoves(THIEF);
+  if (!moves.length) { finishAITurn(); return; }
+
+  let best = null, bestScore = -Infinity;
+
+  if (difficulty === 'easy') {
+    best = moves[Math.floor(Math.random() * moves.length)];
+  } else {
+    for (const mv of moves) {
+      const ng = simMove(grid.map(c=>({...c})), mv.from, mv.to, mv.type, THIEF);
+      let score = scoreG(ng, THIEF);
+
+      if (difficulty === 'hard') {
+        // 2-ply: best officer reply
+        const oppMvs = [];
+        for (const cell of ng) {
+          if (cell.owner !== OFFICER) continue;
+          for (const nb of ng) {
+            const d = hexDist(cell, nb);
+            if (nb.owner === EMPTY && d <= 2)
+              oppMvs.push({from:cell, to:nb, type:d===1?'clone':'jump'});
+          }
+        }
+        if (oppMvs.length) {
+          let worst = Infinity;
+          for (const om of oppMvs) {
+            const s = scoreG(simMove(ng.map(c=>({...c})), om.from, om.to, om.type, OFFICER), THIEF);
+            if (s < worst) worst = s;
+          }
+          score = worst;
+        }
+      }
+
+      if (mv.type === 'clone') score += 0.5;
+      if (score > bestScore) { bestScore = score; best = mv; }
+    }
+  }
+
+  if (best) {
+    applyMove(best.from, best.to, best.type, THIEF);
+    flashCells.push({q:best.to.q, r:best.to.r, t:12});
+  }
+
+  finishAITurn();
+}
+
+function finishAITurn() {
+  const oN = grid.filter(c=>c.owner===OFFICER).length;
+  const tN = grid.filter(c=>c.owner===THIEF).length;
+  const eN = grid.filter(c=>c.owner===EMPTY).length;
+  const oMv = getAllMoves(OFFICER), tMv = getAllMoves(THIEF);
+
+  if (eN === 0 || (!oMv.length && !tMv.length)) {
+    setTimeout(() => showResult(oN, tN), 400);
+    return;
+  }
+
+  turn = OFFICER;
+  if (!oMv.length) turn = THIEF;
+  updateUI();
+}
+
+// ============================================================
+//  RESULT
+// ============================================================
+function showResult(o, t) {
+  const title = document.getElementById('result-title');
+  const sub   = document.getElementById('result-sub');
+  const p2    = gameMode === '2p';
+
+  if (o > t) {
+    title.textContent = '🏆 경찰 승리!';
+    title.style.color = C.officer;
+    sub.textContent = p2 ? `P1 (경찰) 승리!\n${o} vs ${t}` : `경찰 ${o} : 도둑 ${t}\n범인을 잡았습니다!`;
+  } else if (t > o) {
+    title.textContent = '💀 도둑 승리!';
+    title.style.color = C.thief;
+    sub.textContent = p2 ? `P2 (도둑) 승리!\n${t} vs ${o}` : `도둑 ${t} : 경찰 ${o}\n도둑이 도망쳤습니다!`;
+  } else {
+    title.textContent = '🤝 무승부!';
+    title.style.color = '#888';
+    sub.textContent = `경찰 ${o} : 도둑 ${t}`;
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ============================================================
+//  UI
+// ============================================================
+function updateUI() {
+  const oN = grid.filter(c=>c.owner===OFFICER).length;
+  const tN = grid.filter(c=>c.owner===THIEF).length;
+  document.getElementById('officer-count').textContent = oN;
+  document.getElementById('thief-count').textContent   = tN;
+
+  document.getElementById('sb-officer').classList.toggle('active-turn', turn === OFFICER);
+  document.getElementById('sb-thief').classList.toggle('active-turn',   turn === THIEF);
+
+  const ti = document.getElementById('turn-indicator');
+  const p2 = gameMode === '2p';
+  if (turn === OFFICER) {
+    ti.textContent = p2 ? '👮‍♀️ P1 경찰 차례' : '👮‍♀️ 경찰 차례 (내 턴)';
+    ti.className   = 'officer-turn';
+  } else {
+    const aiLabel = difficulty==='easy'?'쉬움':difficulty==='hard'?'어려움':'보통';
+    ti.textContent = p2 ? '🦹 P2 도둑 차례' : `🦹 도둑 차례 (AI · ${aiLabel})`;
+    ti.className   = 'thief-turn';
+  }
+}
+
+// ============================================================
+//  DRAWING
+// ============================================================
+function drawHex(x, y, sz, fill, stroke, alpha=1) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI / 3 * i;
+    i ? ctx.lineTo(x + sz*Math.cos(a), y + sz*Math.sin(a))
+      : ctx.moveTo(x + sz*Math.cos(a), y + sz*Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2.5; ctx.stroke(); }
+  ctx.restore();
+}
+
+function drawChar(x, y, owner) {
+  if (owner === EMPTY) return;
+  const r = hexSize * 0.38;
+  ctx.save();
+
+  if (owner === OFFICER) {
+    // Cap
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath(); ctx.ellipse(x, y-r*0.58, r*0.72, r*0.26, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillRect(x-r*0.58, y-r*0.72, r*1.16, r*0.2);
+    // Badge
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath(); ctx.arc(x, y-r*0.6, r*0.13, 0, Math.PI*2); ctx.fill();
+    // Face
+    ctx.fillStyle = '#f9c784';
+    ctx.beginPath(); ctx.ellipse(x, y-r*0.14, r*0.44, r*0.44, 0, 0, Math.PI*2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(x-r*0.15, y-r*0.18, r*0.07, 0, Math.PI*2);
+    ctx.arc(x+r*0.15, y-r*0.18, r*0.07, 0, Math.PI*2);
+    ctx.fill();
+    // Smile
+    ctx.strokeStyle = '#a05030'; ctx.lineWidth = r*0.07;
+    ctx.beginPath(); ctx.arc(x, y-r*0.04, r*0.16, 0.15, Math.PI-0.15); ctx.stroke();
+    // Body
+    ctx.fillStyle = C.officerDark;
+    ctx.beginPath(); ctx.ellipse(x, y+r*0.36, r*0.44, r*0.38, 0, 0, Math.PI*2); ctx.fill();
+  } else {
+    // Thief mask
+    ctx.fillStyle = '#1e7a88';
+    ctx.beginPath(); ctx.ellipse(x, y-r*0.2, r*0.54, r*0.54, 0, 0, Math.PI*2); ctx.fill();
+    // Eye holes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(x-r*0.19, y-r*0.22, r*0.13, r*0.1, 0, 0, Math.PI*2);
+    ctx.ellipse(x+r*0.19, y-r*0.22, r*0.13, r*0.1, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(x-r*0.19, y-r*0.22, r*0.07, 0, Math.PI*2);
+    ctx.arc(x+r*0.19, y-r*0.22, r*0.07, 0, Math.PI*2);
+    ctx.fill();
+    // Grin
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = r*0.09;
+    ctx.beginPath(); ctx.arc(x, y-r*0.04, r*0.19, 0.18, Math.PI-0.18); ctx.stroke();
+    // Body
+    ctx.fillStyle = '#2a98a8';
+    ctx.beginPath(); ctx.ellipse(x, y+r*0.38, r*0.44, r*0.36, 0, 0, Math.PI*2); ctx.fill();
+    // Bag
+    ctx.fillStyle = '#6b3410';
+    ctx.beginPath(); ctx.arc(x+r*0.33, y+r*0.26, r*0.24, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffd700';
+    ctx.font = `bold ${r*0.22}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('$', x+r*0.33, y+r*0.27);
+  }
+  ctx.restore();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  flashCells = flashCells.filter(f => { f.t--; return f.t > 0; });
+
+  for (const cell of grid) {
+    const {x, y} = hexToPixel(cell.q, cell.r);
+    let fill  = C.empty,     stroke = C.emptyDark;
+    if (cell.owner === OFFICER) { fill = C.officer; stroke = C.officerDark; }
+    if (cell.owner === THIEF)   { fill = C.thief;   stroke = C.thiefDark; }
+
+    // Shadow
+    drawHex(x+2, y+3, hexSize-1, C.shadow, null, 0.45);
+
+    // Flash
+    const fl = flashCells.find(f => f.q===cell.q && f.r===cell.r);
+    if (fl) { const p = Math.sin(fl.t/9*Math.PI); fill = `rgba(255,248,100,${0.55+p*0.45})`; stroke = '#ffd700'; }
+
+    // Valid move highlight
+    const vm = validMoves.find(m => m.q===cell.q && m.r===cell.r);
+    if (vm) { fill = C.move; stroke = vm.type==='clone' ? C.moveDark : '#ff8800'; }
+
+    // Selected
+    if (selected && selected.q===cell.q && selected.r===cell.r) { fill = C.highlight; stroke = '#cc8800'; }
+
+    drawHex(x, y, hexSize-2, fill, stroke);
+
+    // Move type icon
+    if (vm) {
+      ctx.save(); ctx.globalAlpha = 0.72;
+      ctx.font = `${hexSize*0.36}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(vm.type==='clone' ? '＋' : '➜', x, y);
+      ctx.restore();
+    }
+
+    drawChar(x, y, cell.owner);
+  }
+
+  if (flashCells.length > 0 || animating) requestAnimationFrame(draw);
+}
+
+// ============================================================
+//  INPUT
+// ============================================================
+function canInteract() {
+  if (animating || pendingPass) return false;
+  if (gameMode === '1p') return turn === OFFICER;
+  return true;
+}
+
+function handleTap(px, py) {
+  if (!canInteract()) return;
+
+  const {q, r} = pixelToHex(px, py);
+  const cell = getCell(q, r);
+  if (!cell) { selected = null; validMoves = []; draw(); return; }
+
+  if (selected) {
+    const mv = validMoves.find(m => m.q===q && m.r===r);
+    if (mv) {
+      applyMove(selected, mv, mv.type, turn);
+      afterPlayerMove();
+      return;
+    }
+  }
+
+  if (cell.owner === turn) {
+    selected = {q, r};
+    validMoves = getValidMoves(q, r);
+  } else {
+    selected = null;
+    validMoves = [];
+  }
+  draw();
+}
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  handleTap((e.clientX-rect.left)*canvas.width/rect.width, (e.clientY-rect.top)*canvas.height/rect.height);
+});
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0], rect = canvas.getBoundingClientRect();
+  handleTap((t.clientX-rect.left)*canvas.width/rect.width, (t.clientY-rect.top)*canvas.height/rect.height);
+}, {passive: false});
+
+window.addEventListener('resize', () => { resize(); draw(); });
+
+// Start on home screen
+resize();
+</script>
+
+</body>
+</html>
